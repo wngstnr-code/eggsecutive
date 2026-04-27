@@ -904,15 +904,6 @@ export default function Home() {
             />
           </svg>
         </a>
-        <button
-          className="home-help-btn fixed-help"
-          type="button"
-          onClick={() => setShowHelp(true)}
-          title="How to Play"
-          aria-label="How to play"
-        >
-          ?
-        </button>
       </div>
     </main>
   );
