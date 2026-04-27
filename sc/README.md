@@ -62,11 +62,20 @@ Set values in `sc/.env`:
 ```bash
 BASE_SEPOLIA_RPC_URL=https://your-base-sepolia-rpc
 PRIVATE_KEY=0xyour_private_key
+
+# Optional deploy overrides
 INITIAL_OWNER=0xyour_owner_address
-USDC_FAUCET_CLAIM_AMOUNT=100000000
 BACKEND_SIGNER=0xyour_backend_signer_address
+USDC_FAUCET_CLAIM_AMOUNT=100000000
 SESSION_EXPIRY_DELAY=86400
+
+# Optional verification
 BASESCAN_API_KEY=your_basescan_api_key
+
+# Signer rotation script only
+GAME_SETTLEMENT_ADDRESS=0xyour_game_settlement_proxy
+TRUST_PASSPORT_ADDRESS=0xyour_trust_passport_proxy
+NEW_BACKEND_SIGNER=0xyour_new_backend_signer_address
 ```
 
 Minimum required values for deployment are:
@@ -74,10 +83,19 @@ Minimum required values for deployment are:
 - `BASE_SEPOLIA_RPC_URL`
 - `PRIVATE_KEY`
 
-Other useful values:
+Optional deploy overrides:
 
 - `INITIAL_OWNER`
-- `GAME_VAULT_ADDRESS`
+- `BACKEND_SIGNER`
+- `USDC_FAUCET_CLAIM_AMOUNT`
+- `SESSION_EXPIRY_DELAY`
+
+Verification only:
+
+- `BASESCAN_API_KEY`
+
+Signer rotation only:
+
 - `GAME_SETTLEMENT_ADDRESS`
 - `TRUST_PASSPORT_ADDRESS`
 - `NEW_BACKEND_SIGNER`
@@ -101,6 +119,21 @@ FOUNDRY_PROFILE=base_release forge build
 ```bash
 forge test --offline
 ```
+
+### Predeploy Check
+
+```bash
+./bin/predeploy-check.sh
+```
+
+This runs the full local readiness flow:
+
+- validates required deploy env values
+- builds contracts
+- runs tests
+- runs the deploy script in `--offline` mode with the `base_release` profile
+
+Using `--offline` avoids a recent Foundry/OpenChain HTTP panic that can happen in some local or sandboxed macOS environments during non-broadcast dry-runs.
 
 ### Format
 
