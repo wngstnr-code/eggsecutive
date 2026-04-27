@@ -31,6 +31,23 @@ function toSettlementErrorMessage(error: unknown) {
       "unknown error",
   );
   const lower = raw.toLowerCase();
+  const selector = extractErrorSelector(error);
+
+  if (selector === "0xa5a58849") {
+    const payload = extractSelectorPayload(error, selector);
+    if (payload.length >= 128) {
+      try {
+        const availableUnits = BigInt(`0x${payload.slice(0, 64)}`);
+        const requiredUnits = BigInt(`0x${payload.slice(64, 128)}`);
+        const available = Number(availableUnits) / 1_000_000;
+        const required = Number(requiredUnits) / 1_000_000;
+        return `Failed to submit settlement onchain: treasury balance is insufficient (available ${available.toFixed(6)} USDC, required ${required.toFixed(6)} USDC).`;
+      } catch {
+        return "Failed to submit settlement onchain: treasury balance is insufficient for payout.";
+      }
+    }
+    return "Failed to submit settlement onchain: treasury balance is insufficient for payout.";
+  }
 
   if (
     lower.includes("insufficient funds") ||
@@ -74,6 +91,34 @@ function toSettlementErrorMessage(error: unknown) {
   }
 
   return `Failed to submit settlement onchain: ${raw}`;
+}
+
+function extractErrorSelector(error: unknown) {
+  const texts = collectErrorTexts(error);
+  for (const text of texts) {
+    const match = text.match(/0x[a-fA-F0-9]{8}\b/);
+    if (match?.[0]) {
+      return match[0].toLowerCase();
+    }
+  }
+  return "";
+}
+
+function extractSelectorPayload(error: unknown, selector: string) {
+  const normalizedSelector = selector.toLowerCase();
+  const texts = collectErrorTexts(error);
+  for (const text of texts) {
+    const lower = text.toLowerCase();
+    const idx = lower.indexOf(normalizedSelector);
+    if (idx < 0) continue;
+    const payload = lower
+      .slice(idx + normalizedSelector.length)
+      .replace(/[^a-f0-9]/g, "");
+    if (payload.length >= 64) {
+      return payload;
+    }
+  }
+  return "";
 }
 
 // Custom error selectors from GameSettlement.sol that mean "session is no longer

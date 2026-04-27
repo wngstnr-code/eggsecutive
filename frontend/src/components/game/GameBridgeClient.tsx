@@ -1518,13 +1518,28 @@ export function GameBridgeClient({
         if (blocker.kind === "pending_settlement") {
           const pending = await fetchPendingSettlements();
           if (pending.hasPending && pending.pendingSettlements.length > 0) {
-            await settlePendingSettlements(pending.pendingSettlements, {
-              targetOnchainSessionId: blocker.onchainSessionId,
-            });
+            try {
+              await settlePendingSettlements(pending.pendingSettlements, {
+                targetOnchainSessionId: blocker.onchainSessionId,
+              });
 
-            const remaining = await fetchPendingSettlements();
-            if (remaining.hasPending && remaining.pendingSettlements.length > 0) {
-              await settlePendingSettlements(remaining.pendingSettlements);
+              const remaining = await fetchPendingSettlements();
+              if (remaining.hasPending && remaining.pendingSettlements.length > 0) {
+                await settlePendingSettlements(remaining.pendingSettlements);
+              }
+            } catch (settleError) {
+              console.warn(
+                "⚠️ Pending settlement failed, fallback to force-end-active:",
+                settleError,
+              );
+              emitDepositProgress(
+                "settle_sign",
+                "Fallback: force ending previous bet...",
+              );
+              await backendPost<{
+                success: boolean;
+                resolved?: boolean;
+              }>("/api/game/force-end-active");
             }
           }
         } else {
