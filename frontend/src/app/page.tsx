@@ -207,7 +207,9 @@ export default function Home() {
   });
 
   const walletUsdcDisplay =
-    walletUsdcData === undefined ? "-" : formatWalletUsdcDisplay(walletUsdcData);
+    walletUsdcData === undefined
+      ? "-"
+      : formatWalletUsdcDisplay(walletUsdcData);
 
   useEffect(() => {
     if (!showProfilePopover) return;
@@ -367,7 +369,8 @@ export default function Home() {
           stroke="currentColor"
           strokeWidth="2"
           strokeLinecap="round"
-          strokeLinejoin="round">
+          strokeLinejoin="round"
+        >
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
           <circle cx="9" cy="7" r="4"></circle>
           <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
@@ -388,7 +391,8 @@ export default function Home() {
           stroke="currentColor"
           strokeWidth="2"
           strokeLinecap="round"
-          strokeLinejoin="round">
+          strokeLinejoin="round"
+        >
           <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
         </svg>
       ),
@@ -406,7 +410,8 @@ export default function Home() {
           stroke="currentColor"
           strokeWidth="2"
           strokeLinecap="round"
-          strokeLinejoin="round">
+          strokeLinejoin="round"
+        >
           <path d="M6 3h12l4 6-10 12L2 9z"></path>
           <path d="M11 3 8 9l3 12 3-12-3-6z"></path>
           <path d="M2 9h20"></path>
@@ -433,14 +438,16 @@ export default function Home() {
                 <button
                   className="flow-btn secondary home-nav-login"
                   type="button"
-                  onClick={() => setShowProfilePopover((current) => !current)}>
+                  onClick={() => setShowProfilePopover((current) => !current)}
+                >
                   {shortAddress(account)}
                 </button>
 
                 {showProfilePopover && (
                   <section
                     className="flow-status home-profile-popover"
-                    style={{ color: "white" }}>
+                    style={{ color: "white" }}
+                  >
                     <p className="home-preview-title home-profile-heading">
                       PROFILE
                     </p>
@@ -464,7 +471,8 @@ export default function Home() {
                             isMiniPay || isAppChain
                               ? "home-profile-value-ready"
                               : "home-profile-value-warning"
-                          }`}>
+                          }`}
+                        >
                           {isMiniPay
                             ? "MINIPAY / BASE"
                             : isAppChain
@@ -476,19 +484,22 @@ export default function Home() {
                     <div className="home-profile-actions">
                       <Link
                         href="/"
-                        className="flow-btn home-profile-action home-profile-action-dashboard">
+                        className="flow-btn home-profile-action home-profile-action-dashboard"
+                      >
                         HOME
                       </Link>
                       <Link
                         href="/managemoney"
-                        className="flow-btn home-profile-action home-profile-action-manage">
+                        className="flow-btn home-profile-action home-profile-action-manage"
+                      >
                         MANAGE MONEY
                       </Link>
                       {canDisconnect ? (
                         <button
                           className="flow-btn home-profile-action home-profile-action-logout"
                           type="button"
-                          onClick={onLogout}>
+                          onClick={onLogout}
+                        >
                           LOG OUT
                         </button>
                       ) : null}
@@ -500,14 +511,16 @@ export default function Home() {
               <button
                 className="flow-btn secondary home-nav-login"
                 type="button"
-                disabled>
+                disabled
+              >
                 MINIPAY MODE
               </button>
             ) : (
               <button
                 className="flow-btn primary home-nav-login"
                 type="button"
-                onClick={openHeroConnectPrompt}>
+                onClick={openHeroConnectPrompt}
+              >
                 LOGIN
               </button>
             )}
@@ -535,7 +548,8 @@ export default function Home() {
                   <p>{MINIPAY_UNSUPPORTED_CHAIN_MESSAGE}</p>
                   <a
                     href={MINIPAY_ADD_CASH_URL}
-                    className="flow-btn home-btn-main home-hero-back-btn">
+                    className="flow-btn home-btn-main home-hero-back-btn"
+                  >
                     OPEN ADD CASH
                   </a>
                 </div>
@@ -551,14 +565,16 @@ export default function Home() {
                     type="button"
                     className="flow-btn home-btn-main home-hero-cta"
                     onClick={() => void connectWallet()}
-                    disabled={isConnecting}>
+                    disabled={isConnecting}
+                  >
                     {isConnecting ? "CONNECTING..." : "CONNECT WALLET"}
                   </button>
                   <button
                     type="button"
                     className="flow-btn home-btn-main home-hero-back-btn"
                     onClick={onHeroBack}
-                    disabled={isConnecting}>
+                    disabled={isConnecting}
+                  >
                     BACK
                   </button>
                   {error ? (
@@ -571,7 +587,8 @@ export default function Home() {
                 <button
                   type="button"
                   className="flow-btn home-btn-main home-hero-cta"
-                  onClick={onHeroPlayNow}>
+                  onClick={onHeroPlayNow}
+                >
                   PLAY NOW
                 </button>
               ) : null}
@@ -580,25 +597,29 @@ export default function Home() {
                 <div className="home-hero-connected-actions">
                   <a
                     href="/play"
-                    className="flow-btn home-btn-main dashboard-btn dashboard-btn-play">
+                    className="flow-btn home-btn-main dashboard-btn dashboard-btn-play"
+                  >
                     PLAY NOW
                   </a>
                   <button
                     type="button"
                     className="flow-btn home-btn-main dashboard-btn dashboard-btn-how"
-                    onClick={() => setShowHelp(true)}>
+                    onClick={() => setShowHelp(true)}
+                  >
                     HOW TO PLAY
                   </button>
                   <a
                     href="/managemoney"
-                    className="flow-btn home-btn-main dashboard-btn dashboard-btn-deposit">
+                    className="flow-btn home-btn-main dashboard-btn dashboard-btn-deposit"
+                  >
                     MANAGE MONEY
                   </a>
                   {canDisconnect ? (
                     <button
                       type="button"
                       className="flow-btn home-btn-main dashboard-btn dashboard-btn-logout"
-                      onClick={onLogout}>
+                      onClick={onLogout}
+                    >
                       LOG OUT
                     </button>
                   ) : null}
@@ -616,8 +637,8 @@ export default function Home() {
               WHAT IS PASS CHICK?
             </h2>
             <p className="home-about-copy">
-              Pass Chick is a fast risk-reward demo where players cross
-              lanes, stack multiplier, and choose when to cash out.
+              Pass Chick is a fast risk-reward demo where players cross lanes,
+              stack multiplier, and choose when to cash out.
             </p>
           </div>
 
@@ -625,7 +646,8 @@ export default function Home() {
             {ABOUT_FEATURES.map((item) => (
               <article key={item.title} className="home-about-feature">
                 <div
-                  className={`home-about-media home-about-media-${item.tone}`}>
+                  className={`home-about-media home-about-media-${item.tone}`}
+                >
                   {item.imageSrc ? (
                     <img
                       className="home-about-image"
@@ -651,7 +673,8 @@ export default function Home() {
         <div className="home-shell home-shell-section">
           <div className="home-section-head home-section-head-center">
             <h2 className="home-section-title home-section-title-social">
-              LIVE <span className="home-section-title-accent">ARCADE PULSE</span>
+              LIVE{" "}
+              <span className="home-section-title-accent">ARCADE PULSE</span>
             </h2>
           </div>
 
@@ -673,7 +696,10 @@ export default function Home() {
               </div>
               <ul className="home-social-list">
                 {distanceBoard.slice(0, 3).map((entry, index) => (
-                  <li key={`${entry.wallet_address}-${index}`} className="home-social-item">
+                  <li
+                    key={`${entry.wallet_address}-${index}`}
+                    className="home-social-item"
+                  >
                     <div>
                       <p>RANK #{index + 1}</p>
                       <h4>{shortAddress(entry.wallet_address)}</h4>
@@ -694,12 +720,16 @@ export default function Home() {
               </div>
               <ul className="home-social-list">
                 {profitBoard.slice(0, 3).map((entry, index) => (
-                  <li key={`${entry.wallet_address}-${index}`} className="home-social-item">
+                  <li
+                    key={`${entry.wallet_address}-${index}`}
+                    className="home-social-item"
+                  >
                     <div>
                       <p>RANK #{index + 1}</p>
                       <h4>{shortAddress(entry.wallet_address)}</h4>
                       <span>
-                        {toNumber(entry.total_games)} runs | {toNumber(entry.total_wins)} wins
+                        {toNumber(entry.total_games)} runs |{" "}
+                        {toNumber(entry.total_wins)} wins
                       </span>
                     </div>
                     <strong>{formatMoney(entry.total_profit)}</strong>
@@ -731,13 +761,11 @@ export default function Home() {
               <h3>TRUST PASSPORT</h3>
               <p>
                 Passport is a reusable trust layer from your gameplay behavior.
-                It can be consumed by this game and external projects as anti-bot
-                signal.
+                It can be consumed by this game and external projects as
+                anti-bot signal.
               </p>
             </div>
-            <p>
-              Live contracts: USDC + Vault + Settlement + Passport on Base.
-            </p>
+            <p>Live contracts: USDC + Vault + Settlement + Passport on Base.</p>
           </div>
         </div>
       </section>
@@ -793,7 +821,8 @@ export default function Home() {
             <button
               className="home-modal-close"
               type="button"
-              onClick={() => setShowHelp(false)}>
+              onClick={() => setShowHelp(false)}
+            >
               X
             </button>
             <h2>HOW TO PLAY</h2>
@@ -802,9 +831,7 @@ export default function Home() {
                 <span className="step-num">1</span>
                 <div>
                   <p className="step-title">MANAGE MONEY</p>
-                  <p>
-                    Deposit USDC into the vault before starting a paid run.
-                  </p>
+                  <p>Deposit USDC into the vault before starting a paid run.</p>
                 </div>
               </div>
               <div className="help-step">
@@ -831,7 +858,8 @@ export default function Home() {
             <button
               className="flow-btn secondary info-modal-action"
               type="button"
-              onClick={() => setShowHelp(false)}>
+              onClick={() => setShowHelp(false)}
+            >
               GOT IT
             </button>
           </div>
@@ -842,7 +870,8 @@ export default function Home() {
         className="home-help-btn fixed-help"
         type="button"
         onClick={() => setShowHelp(true)}
-        title="How to Play">
+        title="How to Play"
+      >
         ?
       </button>
     </main>

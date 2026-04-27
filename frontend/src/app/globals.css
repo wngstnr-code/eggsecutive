@@ -6937,7 +6937,7 @@ canvas.game {
   .score-card {
     grid-area: score;
     width: 100% !important;
-    padding: 6px 12px;
+    padding: 8px 16px;
     border-radius: 12px;
     background: rgba(17, 26, 43, 0.65) !important;
     backdrop-filter: blur(8px);
@@ -6960,19 +6960,20 @@ canvas.game {
     display: flex;
     flex-direction: column;
     align-items: center;
+    transform: none !important;
   }
 
   .score-meta {
     font-size: 6px;
     letter-spacing: 0.7px;
+    margin-bottom: 4px;
+    line-height: 1;
   }
 
-  .score-card .stat-value {
-    font-size: 13px;
-  }
-
+  .score-card .stat-value,
   .score-cp-value {
-    font-size: 13px;
+    font-size: 14px !important;
+    line-height: 1 !important;
   }
 
   .score-separator {
@@ -7023,12 +7024,14 @@ canvas.game {
 
   #timer-card .stat-label {
     font-size: 6px;
-    margin-bottom: 2px;
+    margin-bottom: 4px;
     letter-spacing: 0.8px;
+    line-height: 1;
   }
 
   #timer-card .stat-value {
-    font-size: 13px;
+    font-size: 14px !important;
+    line-height: 1 !important;
   }
 
   #controls {
