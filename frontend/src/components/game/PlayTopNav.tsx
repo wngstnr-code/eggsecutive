@@ -3,6 +3,13 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 
 import { useEffect, useRef, useState } from "react";
+import {
+  BadgeCheck,
+  House,
+  Play as PlayIcon,
+  Trophy,
+  WalletCards,
+} from "lucide-react";
 import { useWallet } from "~/components/web3/WalletProvider";
 import { APP_CHAIN } from "~/lib/web3/chain";
 import { MINIPAY_UNSUPPORTED_CHAIN_MESSAGE } from "~/lib/web3/minipay";
@@ -495,6 +502,12 @@ export function PlayTopNav() {
   }, [isMenuOpen]);
 
   useEffect(() => {
+    if (!isMobile) {
+      setIsAlertsOpen(false);
+    }
+  }, [isMobile]);
+
+  useEffect(() => {
     try {
       const raw = localStorage.getItem(SFX_STORAGE_KEY);
       const initial = raw == null || raw === "" ? 0.9 : Number.parseFloat(raw);
@@ -669,7 +682,8 @@ export function PlayTopNav() {
               $0.00
             </strong>
           </div>
-            <div className="play-nav-actions">
+          <div className="play-nav-actions">
+            {isMobile ? (
               <div ref={alertRootRef} className="play-alert-wrap">
                 <button
                   type="button"
@@ -710,8 +724,9 @@ export function PlayTopNav() {
                   </section>
                 ) : null}
               </div>
+            ) : null}
 
-              <div ref={menuRootRef} className="play-menu-container">
+            <div ref={menuRootRef} className="play-menu-container">
                 <button
                   type="button"
                   className={`play-menu-trigger${isMenuOpen ? " active" : ""}`}
@@ -851,18 +866,27 @@ export function PlayTopNav() {
         >
           MANAGE MONEY
         </button>
+        {isMobile ? (
           <div className={`play-bottom-navbar-v2${isMenuOpen ? " hidden" : ""}`}>
             <button
               type="button"
               className="play-bottom-nav-tab"
-              onClick={onManageMoneyClick}
+              onClick={() => {
+                window.location.href = "/";
+              }}
+              aria-label="Go home"
             >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="6" width="20" height="12" rx="2" />
-                <circle cx="12" cy="12" r="2" />
-                <path d="M6 12h.01M18 12h.01" />
-              </svg>
-              <span>MANAGE MONEY</span>
+              <House aria-hidden="true" />
+              <span>HOME</span>
+            </button>
+            <button
+              type="button"
+              className="play-bottom-nav-tab"
+              onClick={onManageMoneyClick}
+              aria-label="Manage money"
+            >
+              <WalletCards aria-hidden="true" />
+              <span>MONEY</span>
             </button>
             <div className="play-bottom-nav-center">
               <button
@@ -872,24 +896,35 @@ export function PlayTopNav() {
                   const betBtn = document.getElementById("bet-btn");
                   if (betBtn) betBtn.click();
                 }}
+                aria-label="Start run"
               >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
+                <PlayIcon aria-hidden="true" fill="currentColor" />
               </button>
               <span>PLAY</span>
             </div>
             <button
               type="button"
-              id="leaderboard-btn"
               className="play-bottom-nav-tab"
+              onClick={onLeaderboardMenuClick}
+              aria-label="Open leaderboard"
             >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 20V10M12 20V4M6 20V12" />
-              </svg>
-              <span>LEADERBOARD</span>
+              <Trophy aria-hidden="true" />
+              <span>LEADERS</span>
+            </button>
+            <button
+              type="button"
+              className="play-bottom-nav-tab play-bottom-nav-tab-passport"
+              onClick={() => {
+                void onClaimPassportClick();
+              }}
+              disabled={passportBusy}
+              aria-label="Claim passport"
+            >
+              <BadgeCheck aria-hidden="true" />
+              <span>PASSPORT</span>
             </button>
           </div>
+        ) : null}
         <div
           className={`play-status play-status-${statusTone}${isIdleReadyStatus ? " play-status-idle" : ""}`}
           aria-live="polite"
