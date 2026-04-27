@@ -26,9 +26,6 @@ import {
   GAME_VAULT_ADDRESS,
   TRUST_PASSPORT_ABI,
   TRUST_PASSPORT_ADDRESS,
-  FIXED_GAME_STAKE_DISPLAY,
-  FIXED_GAME_STAKE_NUMBER,
-  FIXED_GAME_STAKE_UNITS,
   USDC_ADDRESS,
   USDC_DECIMALS,
   hasGameContractConfig,
@@ -129,6 +126,8 @@ const RECONNECT_GRACE_TIMEOUT_MS = 32_000;
 const APPROVE_MAX_USDC_UNITS = parseUnits("10000000", USDC_DECIMALS);
 const ZERO_BYTES32 = `0x${"0".repeat(64)}`;
 const ACTIVE_SESSION_CACHE_MS = 2500;
+const MIN_BET_STAKE_USDC = 1;
+const MAX_BET_STAKE_USDC = 100;
 
 function sleep(ms: number) {
   return new Promise<void>((resolve) => {
@@ -350,6 +349,25 @@ function toNumberAmount(value: bigint) {
 function formatUsdcDisplayAmount(value: number) {
   if (!Number.isFinite(value)) return "0.00";
   return value.toFixed(2);
+}
+
+function normalizeStakeInput(value: number) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    throw new Error("Stake amount is invalid.");
+  }
+  const normalized = Number(parsed.toFixed(USDC_DECIMALS));
+  if (normalized < MIN_BET_STAKE_USDC || normalized > MAX_BET_STAKE_USDC) {
+    throw new Error(
+      `Stake must be between ${MIN_BET_STAKE_USDC} and ${MAX_BET_STAKE_USDC} USDC.`,
+    );
+  }
+  return normalized;
+}
+
+function toStakeUnits(stake: number) {
+  const fixed = stake.toFixed(USDC_DECIMALS).replace(/\.?0+$/, "");
+  return parseUnits(fixed.length > 0 ? fixed : "0", USDC_DECIMALS);
 }
 
 function rejectPendingRequest<T>(
@@ -1263,6 +1281,81 @@ export function GameBridgeClient({
       return lastBlocker;
     }
 
+    async function resolvePlayBlockerInternal(
+      existingBlocker?: ChickenBridgePlayBlocker,
+    ) {
+      const playerAddress = await requireReadyGameWallet();
+      const blocker = existingBlocker || (await getPlayBlocker());
+
+      if (blocker.kind === "none") {
+        emitPlayBlocker(blocker);
+        return false;
+      }
+
+      if (blocker.kind === "pending_settlement") {
+        const pending = await fetchPendingSettlements();
+        if (pending.hasPending && pending.pendingSettlements.length > 0) {
+          try {
+            await settlePendingSettlements(pending.pendingSettlements, {
+              targetOnchainSessionId: blocker.onchainSessionId,
+            });
+
+            const remaining = await fetchPendingSettlements();
+            if (remaining.hasPending && remaining.pendingSettlements.length > 0) {
+              await settlePendingSettlements(remaining.pendingSettlements);
+            }
+          } catch (settleError) {
+            console.warn(
+              "⚠️ Pending settlement failed, fallback to force-end-active:",
+              settleError,
+            );
+            emitDepositProgress(
+              "settle_sign",
+              "Fallback: force ending previous bet...",
+            );
+            await backendPost<{
+              success: boolean;
+              resolved?: boolean;
+            }>("/api/game/force-end-active");
+          }
+        }
+      } else {
+        emitDepositProgress("settle_sign", "Ending previous bet...");
+        await backendPost<{
+          success: boolean;
+          resolved?: boolean;
+        }>("/api/game/force-end-active");
+
+        const pending = await fetchPendingSettlements();
+        if (pending.hasPending && pending.pendingSettlements.length > 0) {
+          await settlePendingSettlements(pending.pendingSettlements, {
+            targetOnchainSessionId: blocker.onchainSessionId,
+          });
+
+          const remaining = await fetchPendingSettlements();
+          if (remaining.hasPending && remaining.pendingSettlements.length > 0) {
+            await settlePendingSettlements(remaining.pendingSettlements);
+          }
+        }
+      }
+
+      const onchainCheck = await waitForOnchainSessionCleared(playerAddress, {
+        attempts: 7,
+        intervalMs: 1200,
+      });
+      if (!onchainCheck.cleared) {
+        throw new Error(
+          `There is still an old active on-chain session (${shortSessionId(onchainCheck.activeSessionId)}). Please try again shortly.`,
+        );
+      }
+
+      const refreshedBlocker = await waitForPlayBlockerCleared({
+        attempts: 6,
+        intervalMs: 650,
+      });
+      return refreshedBlocker.kind === "none";
+    }
+
     window.__CHICKEN_GAME_BRIDGE__ = {
       backgroundMode: false,
       loadAvailableBalance: async () => {
@@ -1483,21 +1576,17 @@ export function GameBridgeClient({
       autoSettlePending: async () => {
         await requireReadyGameWallet();
 
-        // 1. Cek apakah ada settlement yang tertunda di backend (sudah sign tapi belum submit ke chain)
-        const pending = await fetchPendingSettlements();
-
-        if (!pending.hasPending || pending.pendingSettlements.length === 0) {
+        const blocker = await getPlayBlocker();
+        if (blocker.kind === "none") {
           await refreshPlayBlockerStatus();
           return false;
         }
 
         console.log(
-          `🧹 Auto-settling ${pending.pendingSettlements.length} pending session(s)...`,
+          `🧹 Auto-resolving blocker (${blocker.kind}) before start...`,
         );
 
-        const didSettle = await settlePendingSettlements(
-          pending.pendingSettlements,
-        );
+        const didSettle = await resolvePlayBlockerInternal(blocker);
         await refreshPlayBlockerStatus();
         return didSettle;
       },
@@ -1506,78 +1595,7 @@ export function GameBridgeClient({
         emitPlayBlocker(blocker);
         return blocker;
       },
-      resolvePlayBlocker: async () => {
-        const playerAddress = await requireReadyGameWallet();
-        const blocker = await getPlayBlocker();
-
-        if (blocker.kind === "none") {
-          emitPlayBlocker(blocker);
-          return false;
-        }
-
-        if (blocker.kind === "pending_settlement") {
-          const pending = await fetchPendingSettlements();
-          if (pending.hasPending && pending.pendingSettlements.length > 0) {
-            try {
-              await settlePendingSettlements(pending.pendingSettlements, {
-                targetOnchainSessionId: blocker.onchainSessionId,
-              });
-
-              const remaining = await fetchPendingSettlements();
-              if (remaining.hasPending && remaining.pendingSettlements.length > 0) {
-                await settlePendingSettlements(remaining.pendingSettlements);
-              }
-            } catch (settleError) {
-              console.warn(
-                "⚠️ Pending settlement failed, fallback to force-end-active:",
-                settleError,
-              );
-              emitDepositProgress(
-                "settle_sign",
-                "Fallback: force ending previous bet...",
-              );
-              await backendPost<{
-                success: boolean;
-                resolved?: boolean;
-              }>("/api/game/force-end-active");
-            }
-          }
-        } else {
-          emitDepositProgress("settle_sign", "Ending previous bet...");
-          await backendPost<{
-            success: boolean;
-            resolved?: boolean;
-          }>("/api/game/force-end-active");
-
-          const pending = await fetchPendingSettlements();
-          if (pending.hasPending && pending.pendingSettlements.length > 0) {
-            await settlePendingSettlements(pending.pendingSettlements, {
-              targetOnchainSessionId: blocker.onchainSessionId,
-            });
-
-            const remaining = await fetchPendingSettlements();
-            if (remaining.hasPending && remaining.pendingSettlements.length > 0) {
-              await settlePendingSettlements(remaining.pendingSettlements);
-            }
-          }
-        }
-
-        const onchainCheck = await waitForOnchainSessionCleared(playerAddress, {
-          attempts: 7,
-          intervalMs: 1200,
-        });
-        if (!onchainCheck.cleared) {
-          throw new Error(
-            `There is still an old active on-chain session (${shortSessionId(onchainCheck.activeSessionId)}). Please try again shortly.`,
-          );
-        }
-
-        const refreshedBlocker = await waitForPlayBlockerCleared({
-          attempts: 6,
-          intervalMs: 650,
-        });
-        return refreshedBlocker.kind === "none";
-      },
+      resolvePlayBlocker: async () => resolvePlayBlockerInternal(),
       getPassportStatus: async () => {
         await requireBackendWalletSession();
         return backendFetch<ChickenBridgePassportStatus>("/api/passport/status");
@@ -1804,9 +1822,9 @@ export function GameBridgeClient({
           signatureExpiry: Number(issued.signatureExpiry || 0),
         };
       },
-      startBet: async (_stake: number) => {
+      startBet: async (stakeInput: number) => {
         const playerAddress = await requireReadyGameWallet();
-        const stake = FIXED_GAME_STAKE_NUMBER;
+        const stake = normalizeStakeInput(stakeInput);
 
         // --- AUTO SETTLE CHECK ---
         try {
@@ -1827,7 +1845,7 @@ export function GameBridgeClient({
           );
         }
 
-        const stakeAmountUnits = FIXED_GAME_STAKE_UNITS;
+        const stakeAmountUnits = toStakeUnits(stake);
         const [availableBalanceUnits, blocker] = await Promise.all([
           readContract(wagmiConfig, {
             address: GAME_VAULT_ADDRESS as Address,
@@ -1840,7 +1858,7 @@ export function GameBridgeClient({
 
         if (availableBalanceUnits < stakeAmountUnits) {
           throw new Error(
-            `Insufficient available vault balance. Available ${formatUsdcDisplayAmount(toNumberAmount(availableBalanceUnits))} USDC, required ${FIXED_GAME_STAKE_DISPLAY} USDC.`,
+            `Insufficient available vault balance. Available ${formatUsdcDisplayAmount(toNumberAmount(availableBalanceUnits))} USDC, required ${formatUsdcDisplayAmount(stake)} USDC.`,
           );
         }
 
@@ -2041,7 +2059,21 @@ export function GameBridgeClient({
       },
     };
 
-    void refreshPlayBlockerStatus();
+    void (async () => {
+      const initialBlocker = await refreshPlayBlockerStatus();
+      if (initialBlocker.kind === "none") return;
+
+      try {
+        console.log(
+          `🧹 Auto-resolving initial play blocker: ${initialBlocker.kind}`,
+        );
+        await resolvePlayBlockerInternal(initialBlocker);
+      } catch (error) {
+        console.warn("⚠️ Auto-resolve initial play blocker failed:", error);
+      } finally {
+        await refreshPlayBlockerStatus();
+      }
+    })();
 
     return () => {
       pendingStartRef.current = null;

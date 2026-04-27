@@ -1943,6 +1943,27 @@ canvas.game {
   background: rgba(44, 62, 80, 0.09);
 }
 
+.bet-stake-form label {
+  margin-bottom: 4px;
+}
+
+.odds-info .bet-stake-form input {
+  font-size: 12px;
+  padding: 10px 12px;
+  border-width: 2px;
+}
+
+.bet-stake-picks {
+  margin-top: 4px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.bet-stake-picks button {
+  min-height: 38px;
+  padding: 8px 6px;
+  font-size: 9px;
+}
+
 .subtitle.error {
   color: #d63636;
 }

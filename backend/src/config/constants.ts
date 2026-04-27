@@ -37,12 +37,15 @@ export const MOVE_WINDOW_MS = 5000;
 /** Grace period for reconnection: 30 seconds */
 export const GRACE_PERIOD_MS = 30 * 1000;
 
-// ── Fixed Stake (USDC — 6 decimals) ─────────────────────────
-/** Fixed gameplay stake: 0.0001 USDC */
-export const FIXED_STAKE_UNITS = 100;
+// ── Stake Range (USDC — 6 decimals) ─────────────────────────
+/** Minimum stake: 1 USDC */
+export const MIN_STAKE_UNITS = 1_000_000;
+/** Maximum stake: 100 USDC */
+export const MAX_STAKE_UNITS = 100_000_000;
 
-/** Fixed gameplay stake in display units */
-export const FIXED_STAKE = FIXED_STAKE_UNITS / 1_000_000;
+/** Stake range in display units */
+export const MIN_STAKE = MIN_STAKE_UNITS / 1_000_000;
+export const MAX_STAKE = MAX_STAKE_UNITS / 1_000_000;
 
 /** USDC decimals */
 export const USDC_DECIMALS = 6;

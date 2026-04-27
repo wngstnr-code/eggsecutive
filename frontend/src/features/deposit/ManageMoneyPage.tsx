@@ -159,7 +159,7 @@ export function ManageMoneyPage() {
       <section className="flow-card money-card">
         <header className="money-header">
           <div className="money-head-top">
-            <p className="flow-eyebrow">CHICKEN VAULT</p>
+            <p className="flow-eyebrow">EGGSECUTIVE VAULT</p>
             <div className="money-head-badges">
               <span
                 className={`money-head-badge ${

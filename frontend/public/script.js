@@ -21,7 +21,9 @@ const CP_MAX_STAY_MS = 60 * 1000; // auto-exit CP after 60s
 const DECAY_BP_PER_SEC = 1000; // -0.1x per second = -1000 bp/s
 const SPEED_MULT_PER_CP = 1.1; // vehicle speed × 1.3 per CP
 const MAX_MOVE_QUEUE = 8;
-const FIXED_STAKE = 0.0001;
+const DEFAULT_STAKE = 10;
+const MIN_STAKE = 1;
+const MAX_STAKE = 100;
 
 const bet = {
   balance: 0,
@@ -304,6 +306,16 @@ function formatUsdAmount(amount) {
   return "$" + value.toFixed(2);
 }
 
+function normalizeStakeInput(value, fallback = DEFAULT_STAKE) {
+  const parsed = Number(value);
+  if (!isFinite(parsed)) return fallback;
+  return Number(parsed.toFixed(6));
+}
+
+function isValidStakeAmount(stake) {
+  return isFinite(stake) && stake >= MIN_STAKE && stake <= MAX_STAKE;
+}
+
 function formatSignedUsdAmount(amount) {
   const value = Number(amount || 0);
   const sign = value < 0 ? "-" : "";
@@ -567,7 +579,7 @@ function getCurrentEffectiveMultiplierBp(now = Date.now()) {
 }
 
 async function startBet(stake) {
-  const effectiveStake = FIXED_STAKE;
+  const effectiveStake = normalizeStakeInput(stake, DEFAULT_STAKE);
 
   if (hasLiveBridge()) {
     try {
@@ -4208,6 +4220,31 @@ function initBettingUI() {
     });
   });
 
+  const stakeInput = document.getElementById("bet-stake-input");
+  const syncStakeInput = () => {
+    if (!(stakeInput instanceof HTMLInputElement)) return DEFAULT_STAKE;
+    const safeStake = normalizeStakeInput(stakeInput.value, DEFAULT_STAKE);
+    stakeInput.value = safeStake.toFixed(2).replace(/\.?0+$/, "");
+    return safeStake;
+  };
+
+  if (stakeInput instanceof HTMLInputElement) {
+    stakeInput.min = String(MIN_STAKE);
+    stakeInput.max = String(MAX_STAKE);
+    stakeInput.value = normalizeStakeInput(stakeInput.value, DEFAULT_STAKE)
+      .toFixed(2)
+      .replace(/\.?0+$/, "");
+    stakeInput.addEventListener("blur", syncStakeInput);
+  }
+
+  document.querySelectorAll("[data-bet-stake]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      if (!(stakeInput instanceof HTMLInputElement)) return;
+      const nextStake = normalizeStakeInput(btn.dataset.betStake, DEFAULT_STAKE);
+      stakeInput.value = nextStake.toFixed(2).replace(/\.?0+$/, "");
+    });
+  });
+
   function showErrorToast(msg) {
     const panel = document.getElementById("bet-panel");
     if (!panel) return;
@@ -4236,7 +4273,11 @@ function initBettingUI() {
   const startBetBtn = document.getElementById("start-bet-btn");
   startBetBtn?.addEventListener("click", async () => {
     if (startBetBusy) return;
-    const stake = FIXED_STAKE;
+    const stake = syncStakeInput();
+    if (!isValidStakeAmount(stake)) {
+      showErrorToast("Stake must be between 1 and 100 USDC.");
+      return;
+    }
     if (!hasLiveBridge() && stake > bet.balance) {
       showErrorToast(
         `Insufficient balance. You have ${formatUsdAmount(bet.balance)}. Deposit more first.`,
@@ -4295,7 +4336,7 @@ function initBettingUI() {
     } finally {
       startBetBusy = false;
       if (startBetBtn) {
-        startBetBtn.innerText = "START 0.0001 USDC RUN";
+        startBetBtn.innerText = "START BET";
         startBetBtn.disabled = false;
       }
       if (!bet.active && !keepStatusMessage) {

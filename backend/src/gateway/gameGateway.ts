@@ -9,8 +9,10 @@ import {
   STEP_INCREMENT_BP,
   CP_BONUS_NUM,
   CP_BONUS_DEN,
-  FIXED_STAKE,
-  FIXED_STAKE_UNITS,
+  MIN_STAKE,
+  MAX_STAKE,
+  MIN_STAKE_UNITS,
+  MAX_STAKE_UNITS,
   GRACE_PERIOD_MS,
 } from "../config/constants.js";
 import {
@@ -25,7 +27,6 @@ import {
   isMoveToFast,
   isSpeedHack,
   getEffectiveMultiplierBp,
-  calculatePayout,
   isCheckpointRow,
 } from "../services/gameValidator.js";
 import {
@@ -72,8 +73,11 @@ function formatUsdcValue(value: number) {
 
 function isValidUsdcStakeAmount(stake: number): boolean {
   if (!Number.isFinite(stake)) return false;
-  const units = stake * 1_000_000;
-  return Math.abs(units - FIXED_STAKE_UNITS) < 1e-6;
+  const units = Math.round(stake * 1_000_000);
+  if (!Number.isInteger(units)) return false;
+  if (units < MIN_STAKE_UNITS || units > MAX_STAKE_UNITS) return false;
+  const normalizedStake = units / 1_000_000;
+  return Math.abs(normalizedStake - stake) < 1e-6;
 }
 
 async function signSettlementWithTimeout(params: Parameters<typeof signSettlement>[0]) {
@@ -110,6 +114,16 @@ function isZeroBytes32(value: string) {
 
 function usdcUnitsToNumber(amount: bigint) {
   return Number(amount) / 1_000_000;
+}
+
+function calculatePayoutFromUnits(stake: number, multiplierBp: number) {
+  const stakeUnits = usdcToUint256(stake);
+  const payoutUnits = (stakeUnits * BigInt(multiplierBp)) / 10_000n;
+  const profitUnits = payoutUnits - stakeUnits;
+  return {
+    payoutAmount: usdcUnitsToNumber(payoutUnits),
+    profit: usdcUnitsToNumber(profitUnits),
+  };
 }
 
 async function readActiveOnchainSession(walletAddress: string) {
@@ -268,7 +282,7 @@ export function setupGameGateway(httpServer: HttpServer): SocketServer {
 async function handleGameStart(socket: Socket, walletAddress: string, stake: number): Promise<void> {
   if (!isValidUsdcStakeAmount(stake)) {
     socket.emit("game:error", {
-      message: `Invalid stake. This build uses a fixed ${FIXED_STAKE} USDC stake per run.`,
+      message: `Invalid stake. Allowed range is ${MIN_STAKE} to ${MAX_STAKE} USDC.`,
     });
     return;
   }
@@ -667,8 +681,10 @@ async function handleGameCashout(socket: Socket, walletAddress: string): Promise
 
   const finalMultiplierBp = state.multiplierBp;
   const finalMultiplier = finalMultiplierBp / 10000;
-  const payoutAmount = calculatePayout(state.stake, finalMultiplierBp);
-  const profit = payoutAmount - state.stake;
+  const { payoutAmount, profit } = calculatePayoutFromUnits(
+    state.stake,
+    finalMultiplierBp,
+  );
   console.log(`💰 CASH OUT: ${walletAddress} | ${finalMultiplier.toFixed(4)}x | $${formatUsdcValue(payoutAmount)}`);
 
   let settlementResult;
@@ -826,8 +842,10 @@ async function handleAutoCashout(walletAddress: string): Promise<void> {
 
   const finalMultiplierBp = state.multiplierBp;
   const finalMultiplier = finalMultiplierBp / 10000;
-  const payoutAmount = calculatePayout(state.stake, finalMultiplierBp);
-  const profit = payoutAmount - state.stake;
+  const { payoutAmount, profit } = calculatePayoutFromUnits(
+    state.stake,
+    finalMultiplierBp,
+  );
   console.log(`🤖 AUTO CASH OUT: ${walletAddress} | ${finalMultiplier.toFixed(4)}x | $${formatUsdcValue(payoutAmount)}`);
 
   let settlementResult;
