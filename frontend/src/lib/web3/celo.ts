@@ -1,4 +1,4 @@
-import { celo } from "viem/chains";
+import { baseSepolia } from "viem/chains";
 
 type NativeCurrency = {
   name: string;
@@ -27,8 +27,8 @@ function parseChainId(rawValue: string) {
   const normalized = String(rawValue || "").trim().toLowerCase();
   if (!normalized) {
       return {
-      chainIdHex: `0x${celo.id.toString(16)}`,
-      chainIdDecimal: celo.id,
+      chainIdHex: `0x${baseSepolia.id.toString(16)}`,
+      chainIdDecimal: baseSepolia.id,
     };
   }
 
@@ -38,8 +38,8 @@ function parseChainId(rawValue: string) {
 
   if (!Number.isFinite(parsed) || parsed <= 0) {
     return {
-      chainIdHex: `0x${celo.id.toString(16)}`,
-      chainIdDecimal: celo.id,
+      chainIdHex: `0x${baseSepolia.id.toString(16)}`,
+      chainIdDecimal: baseSepolia.id,
     };
   }
 
@@ -49,20 +49,20 @@ function parseChainId(rawValue: string) {
   };
 }
 
-const parsedChainId = parseChainId(process.env.NEXT_PUBLIC_CELO_CHAIN_ID || "");
-const chainName = process.env.NEXT_PUBLIC_CELO_CHAIN_NAME || celo.name;
+const parsedChainId = parseChainId(process.env.NEXT_PUBLIC_CHAIN_ID || "");
+const chainName = process.env.NEXT_PUBLIC_CHAIN_NAME || "Base Sepolia";
 const nativeCurrencyName =
-  process.env.NEXT_PUBLIC_CELO_NATIVE_NAME || celo.nativeCurrency.name;
+  process.env.NEXT_PUBLIC_CHAIN_NATIVE_NAME || baseSepolia.nativeCurrency.name;
 const nativeCurrencySymbol =
-  process.env.NEXT_PUBLIC_CELO_NATIVE_SYMBOL ||
-  celo.nativeCurrency.symbol;
+  process.env.NEXT_PUBLIC_CHAIN_NATIVE_SYMBOL ||
+  baseSepolia.nativeCurrency.symbol;
 const nativeCurrencyDecimals = Number(
-  process.env.NEXT_PUBLIC_CELO_NATIVE_DECIMALS ||
-    String(celo.nativeCurrency.decimals),
+  process.env.NEXT_PUBLIC_CHAIN_NATIVE_DECIMALS ||
+    String(baseSepolia.nativeCurrency.decimals),
 );
-const envRpcUrls = splitList(process.env.NEXT_PUBLIC_CELO_RPC_URLS || "");
+const envRpcUrls = splitList(process.env.NEXT_PUBLIC_CHAIN_RPC_URLS || "");
 const envBlockExplorerUrls = splitList(
-  process.env.NEXT_PUBLIC_CELO_EXPLORER_URLS || "",
+  process.env.NEXT_PUBLIC_CHAIN_EXPLORER_URLS || "",
 );
 
 export const CELO_CHAIN: CeloChainConfig = {
@@ -74,15 +74,15 @@ export const CELO_CHAIN: CeloChainConfig = {
     symbol: nativeCurrencySymbol,
     decimals: Number.isFinite(nativeCurrencyDecimals)
       ? nativeCurrencyDecimals
-      : celo.nativeCurrency.decimals,
+      : baseSepolia.nativeCurrency.decimals,
   },
   rpcUrls:
-    envRpcUrls.length > 0 ? envRpcUrls : [...celo.rpcUrls.default.http],
+    envRpcUrls.length > 0 ? envRpcUrls : [...baseSepolia.rpcUrls.default.http],
   blockExplorerUrls:
     envBlockExplorerUrls.length > 0
       ? envBlockExplorerUrls
-      : celo.blockExplorers?.default?.url
-        ? [celo.blockExplorers.default.url]
+      : baseSepolia.blockExplorers?.default?.url
+        ? [baseSepolia.blockExplorers.default.url]
         : [],
 };
 

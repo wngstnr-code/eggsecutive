@@ -11,6 +11,7 @@ import gameRoutes from "./routes/game.js";
 import leaderboardRoutes from "./routes/leaderboard.js";
 import playerRoutes from "./routes/player.js";
 import passportRoutes from "./routes/passport.js";
+import faucetRoutes from "./routes/faucet.js";
 import { getActiveGameCount } from "./services/gameState.js";
 import { readBackendSignerHealth } from "./services/opsHealth.js";
 
@@ -95,6 +96,9 @@ app.use("/api/player", playerRoutes);
 
 // Trust passport
 app.use("/api/passport", passportRoutes);
+
+// Testnet faucet
+app.use("/api/faucet", faucetRoutes);
 
 // 404 fallback
 app.use((_req, res) => {

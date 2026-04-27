@@ -11,6 +11,8 @@ import {
   useWriteContract,
 } from "wagmi";
 import { useWallet } from "~/components/web3/WalletProvider";
+import { backendPost } from "~/lib/backend/api";
+import { hasBackendApiConfig } from "~/lib/backend/config";
 import {
   ERC20_ABI,
   GAME_VAULT_ABI,
@@ -95,7 +97,7 @@ function formatUsdcAmount(value: bigint | undefined) {
 }
 
 export function useOnchainDepositFlow(): DepositFlowViewModel {
-  const { account, isMiniPay, isCeloChain } = useWallet();
+  const { account, isMiniPay, isCeloChain, ensureBackendSession } = useWallet();
   const [amount, setAmount] = useState(() => {
     if (typeof window === "undefined") {
       return "0.0001";
@@ -108,6 +110,9 @@ export function useOnchainDepositFlow(): DepositFlowViewModel {
   const [handledApproveHash, setHandledApproveHash] = useState("");
   const [handledDepositHash, setHandledDepositHash] = useState("");
   const [handledWithdrawHash, setHandledWithdrawHash] = useState("");
+  const [faucetTxHash, setFaucetTxHash] = useState("");
+  const [faucetCooldownSeconds, setFaucetCooldownSeconds] = useState(0);
+  const [isFaucetBusy, setIsFaucetBusy] = useState(false);
 
   const isConnected = Boolean(account);
   const ownerAddress = isAddress(account) ? (account as Address) : undefined;
@@ -305,7 +310,7 @@ export function useOnchainDepositFlow(): DepositFlowViewModel {
 
   async function onApprove() {
     if (!canTransact || !usdcAddress || !vaultAddress) {
-      setUiError("Make sure wallet is connected, on the supported Celo network, and contract config is valid.");
+      setUiError("Make sure wallet is connected, on the supported chain, and contract config is valid.");
       return;
     }
     if (!parsedAmount) {
@@ -336,7 +341,7 @@ export function useOnchainDepositFlow(): DepositFlowViewModel {
 
   async function onDeposit() {
     if (!canTransact || !vaultAddress) {
-      setUiError("Make sure wallet is connected, on the supported Celo network, and contract config is valid.");
+      setUiError("Make sure wallet is connected, on the supported chain, and contract config is valid.");
       return;
     }
     if (!parsedAmount) {
@@ -390,7 +395,7 @@ export function useOnchainDepositFlow(): DepositFlowViewModel {
 
   async function onWithdraw() {
     if (!canTransact || !vaultAddress) {
-      setUiError("Make sure wallet is connected, on the supported Celo network, and contract config is valid.");
+      setUiError("Make sure wallet is connected, on the supported chain, and contract config is valid.");
       return;
     }
     if (!parsedAmount) {
@@ -423,9 +428,58 @@ export function useOnchainDepositFlow(): DepositFlowViewModel {
     }
   }
 
+  async function onRequestFaucet() {
+    if (!isConnected || !account) {
+      setUiError("Connect wallet first before requesting faucet.");
+      return;
+    }
+    if (!isCeloChain) {
+      setUiError(`Wrong network. Switch wallet to ${CELO_CHAIN.chainName} first.`);
+      return;
+    }
+    if (!hasBackendApiConfig()) {
+      setUiError("Faucet requires backend API. Set NEXT_PUBLIC_BACKEND_API_URL first.");
+      return;
+    }
+
+    setUiError("");
+    setStatusMessage("");
+    setIsFaucetBusy(true);
+
+    try {
+      const authenticated = await ensureBackendSession();
+      if (!authenticated) {
+        setUiError("Failed to authenticate backend session for faucet request.");
+        return;
+      }
+
+      const response = await backendPost<{
+        success: boolean;
+        txHash: string;
+        cooldownSeconds?: number;
+      }>("/api/faucet/request");
+
+      const txHash = String(response.txHash || "");
+      if (!txHash) {
+        setUiError("Faucet request completed but tx hash is missing.");
+        return;
+      }
+
+      setFaucetTxHash(txHash);
+      setFaucetCooldownSeconds(Number(response.cooldownSeconds || 0));
+      setStatusMessage("Faucet transaction submitted.");
+      void refetchWalletBalance();
+    } catch (faucetError) {
+      setUiError(toUserFacingError(faucetError, "Failed to request faucet."));
+    } finally {
+      setIsFaucetBusy(false);
+    }
+  }
+
   const approveTxUrl = approveTxHash ? explorerTxUrl(approveTxHash) : "";
   const depositTxUrl = depositTxHash ? explorerTxUrl(depositTxHash) : "";
   const withdrawTxUrl = withdrawTxHash ? explorerTxUrl(withdrawTxHash) : "";
+  const faucetTxUrl = faucetTxHash ? explorerTxUrl(faucetTxHash) : "";
 
   const isApproveBusy = isApproveSubmitting || isApproveConfirming;
   const isDepositBusy = isDepositSubmitting || isDepositConfirming;
@@ -441,6 +495,13 @@ export function useOnchainDepositFlow(): DepositFlowViewModel {
     isApproveBusy ||
     isDepositBusy ||
     isWithdrawBusy;
+  const disableFaucetButton =
+    !isConnected ||
+    !isCeloChain ||
+    isApproveBusy ||
+    isDepositBusy ||
+    isWithdrawBusy ||
+    isFaucetBusy;
 
   const configMessage = isMiniPay
     ? MINIPAY_UNSUPPORTED_CHAIN_MESSAGE
@@ -480,15 +541,21 @@ export function useOnchainDepositFlow(): DepositFlowViewModel {
     depositTxUrl,
     withdrawTxHash: withdrawTxHash || "",
     withdrawTxUrl,
+    faucetTxHash,
+    faucetTxUrl,
     isApproveBusy,
     isDepositBusy,
     isWithdrawBusy,
+    isFaucetBusy,
     disableApproveButton,
     disableDepositButton,
     disableWithdrawButton,
+    disableFaucetButton,
     onApprove,
     onDeposit,
     onWithdraw,
+    onRequestFaucet,
+    faucetCooldownSeconds,
     configMessage,
   };
 }

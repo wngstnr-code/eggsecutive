@@ -25,7 +25,7 @@ The Pass Chick frontend is a Next.js application that handles:
 
 - The frontend now detects MiniPay and auto-reads the injected wallet in the browser.
 - MiniPay users now create a backend session without SIWE message signing, because MiniPay does not support that flow.
-- This build now targets Celo and supports both Sepolia demo wiring and mainnet-style no-faucet wiring.
+- This build now targets Base Sepolia and includes a backend-powered faucet request flow for testnet.
 - For local MiniPay testing, run `npm run dev`, expose port `3000` with `ngrok http 3000`, then load the HTTPS URL from MiniPay's Test Page.
 
 ## Commands
@@ -42,15 +42,15 @@ npm run start
 Example values live in `frontend/.env.example`.
 
 ```bash
-NEXT_PUBLIC_CELO_CHAIN_ID=0xa4ec
-NEXT_PUBLIC_CELO_CHAIN_NAME=Celo Mainnet
-NEXT_PUBLIC_CELO_RPC_URLS=https://forno.celo.org
-NEXT_PUBLIC_CELO_EXPLORER_URLS=https://celoscan.io
-NEXT_PUBLIC_CELO_NATIVE_NAME=CELO
-NEXT_PUBLIC_CELO_NATIVE_SYMBOL=CELO
-NEXT_PUBLIC_CELO_NATIVE_DECIMALS=18
+NEXT_PUBLIC_CHAIN_ID=84532
+NEXT_PUBLIC_CHAIN_NAME=Base Sepolia
+NEXT_PUBLIC_CHAIN_RPC_URLS=https://sepolia.base.org
+NEXT_PUBLIC_CHAIN_EXPLORER_URLS=https://sepolia.basescan.org
+NEXT_PUBLIC_CHAIN_NATIVE_NAME=Ethereum
+NEXT_PUBLIC_CHAIN_NATIVE_SYMBOL=ETH
+NEXT_PUBLIC_CHAIN_NATIVE_DECIMALS=18
 
-NEXT_PUBLIC_USDC_ADDRESS=0xcebA9300f2b948710d2653dD7B07f33A8B32118C
+NEXT_PUBLIC_USDC_ADDRESS=0x...
 NEXT_PUBLIC_GAME_VAULT_ADDRESS=0x...
 NEXT_PUBLIC_GAME_SETTLEMENT_ADDRESS=0x...
 NEXT_PUBLIC_TRUST_PASSPORT_ADDRESS=0x...
@@ -67,10 +67,10 @@ NEXT_PUBLIC_REOWN_PROJECT_ID=your_reown_project_id
 
 ## Current Contract Wiring
 
-- `NEXT_PUBLIC_USDC_ADDRESS=` set this to your active Celo USDC address
-- `NEXT_PUBLIC_GAME_VAULT_ADDRESS=` set this to your active Celo vault address
-- `NEXT_PUBLIC_GAME_SETTLEMENT_ADDRESS=` set this to your active Celo settlement address
-- `NEXT_PUBLIC_TRUST_PASSPORT_ADDRESS=` set this to your active Celo passport address
+- `NEXT_PUBLIC_USDC_ADDRESS=` set this to your active Base Sepolia USDC address
+- `NEXT_PUBLIC_GAME_VAULT_ADDRESS=` set this to your active Base Sepolia vault address
+- `NEXT_PUBLIC_GAME_SETTLEMENT_ADDRESS=` set this to your active Base Sepolia settlement address
+- `NEXT_PUBLIC_TRUST_PASSPORT_ADDRESS=` set this to your active Base Sepolia passport address
 
 ## Common Issues
 
@@ -79,7 +79,7 @@ NEXT_PUBLIC_REOWN_PROJECT_ID=your_reown_project_id
 Check:
 
 - `NEXT_PUBLIC_REOWN_PROJECT_ID` is valid
-- the wallet is switched to the expected Celo network
+- the wallet is switched to the expected Base Sepolia network
 - the frontend was restarted after `.env` changes
 
 ### Backend auth fails
@@ -92,7 +92,7 @@ Check:
 
 ### RPC rate limits
 
-If you see RPC instability, the issue can come from the public Celo RPC.
+If you see RPC instability, the issue can come from the public Base RPC.
 The best fix is to use a stronger RPC provider for both frontend and backend.
 
 ## Build

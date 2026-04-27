@@ -45,12 +45,16 @@ export function useBackendDepositFlow(): DepositFlowViewModel {
     depositTxUrl: "",
     withdrawTxHash: "",
     withdrawTxUrl: "",
+    faucetTxHash: "",
+    faucetTxUrl: "",
     isApproveBusy: false,
     isDepositBusy: false,
     isWithdrawBusy: false,
+    isFaucetBusy: false,
     disableApproveButton: true,
     disableDepositButton: true,
     disableWithdrawButton: true,
+    disableFaucetButton: true,
     onApprove: async () => {
       throw new Error(
         `Backend mode is not implemented yet. Set endpoint in ${BACKEND_API_URL || "frontend/.env.local"}.`
@@ -66,6 +70,12 @@ export function useBackendDepositFlow(): DepositFlowViewModel {
         `Backend mode is not implemented yet. Set endpoint in ${BACKEND_API_URL || "frontend/.env.local"}.`
       );
     },
+    onRequestFaucet: async () => {
+      throw new Error(
+        `Backend mode is not implemented yet. Set endpoint in ${BACKEND_API_URL || "frontend/.env.local"}.`
+      );
+    },
+    faucetCooldownSeconds: 0,
     configMessage,
   };
 }

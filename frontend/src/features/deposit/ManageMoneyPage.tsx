@@ -29,9 +29,9 @@ function shortHash(hash: string) {
 
 function readWalletStatus(flow: DepositFlowViewModel) {
   if (!flow.isConnected) return "Not Connected";
-  if (flow.isMiniPay) return "MiniPay (Celo Only)";
+  if (flow.isMiniPay) return "MiniPay";
   if (!flow.isCeloChain) return "Wrong Network";
-  return "Connected (Celo)";
+  return "Connected";
 }
 
 function readPrimaryLabel(flow: DepositFlowViewModel) {
@@ -104,6 +104,11 @@ export function ManageMoneyPage() {
           hash: flow.withdrawTxHash,
           url: flow.withdrawTxUrl,
         },
+        {
+          label: "Latest Faucet",
+          hash: flow.faucetTxHash,
+          url: flow.faucetTxUrl,
+        },
       ].filter((item) => item.hash),
     [
       flow.approveTxHash,
@@ -112,6 +117,8 @@ export function ManageMoneyPage() {
       flow.depositTxUrl,
       flow.withdrawTxHash,
       flow.withdrawTxUrl,
+      flow.faucetTxHash,
+      flow.faucetTxUrl,
     ],
   );
 
@@ -126,6 +133,14 @@ export function ManageMoneyPage() {
   async function handleWithdrawClick() {
     try {
       await flow.onWithdraw();
+    } catch {
+      // Error sudah ditangani oleh flow.
+    }
+  }
+
+  async function handleFaucetClick() {
+    try {
+      await flow.onRequestFaucet();
     } catch {
       // Error sudah ditangani oleh flow.
     }
@@ -260,7 +275,21 @@ export function ManageMoneyPage() {
               >
                 {flow.isWithdrawBusy ? "WITHDRAWING..." : "WITHDRAW"}
               </button>
+              <button
+                className="flow-btn money-secondary-btn money-withdraw-btn"
+                type="button"
+                disabled={flow.disableFaucetButton}
+                onClick={handleFaucetClick}
+              >
+                {flow.isFaucetBusy ? "REQUESTING FAUCET..." : "REQUEST TESTNET FAUCET"}
+              </button>
             </div>
+
+            {flow.faucetCooldownSeconds > 0 ? (
+              <p className="money-helper">
+                Faucet cooldown per wallet: {flow.faucetCooldownSeconds}s
+              </p>
+            ) : null}
 
             <div className="money-panel-footer">
               <div className="money-footer-actions">

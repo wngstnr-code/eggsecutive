@@ -59,6 +59,10 @@ MIN_RECOMMENDED_NATIVE_BALANCE=0.005
 GAME_VAULT_ADDRESS=0x...
 GAME_SETTLEMENT_ADDRESS=0x...
 TRUST_PASSPORT_ADDRESS=0x...
+FAUCET_CONTRACT_ADDRESS=0x...
+FAUCET_MODE=drip_to
+FAUCET_AMOUNT_UNITS=1000000
+FAUCET_COOLDOWN_SECONDS=300
 
 BACKEND_PRIVATE_KEY=0x...
 
@@ -106,6 +110,11 @@ Passport:
 
 - `GET /api/passport/status`
 - `POST /api/passport/issue-signature`
+
+Faucet:
+
+- `GET /api/faucet/status`
+- `POST /api/faucet/request`
 
 Health:
 

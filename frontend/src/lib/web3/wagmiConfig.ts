@@ -1,10 +1,10 @@
 import type { Chain } from "viem";
-import { celo } from "viem/chains";
+import { baseSepolia } from "viem/chains";
 import { CELO_CHAIN } from "./celo";
 
-const FALLBACK_CHAIN_ID = celo.id;
-const FALLBACK_RPC_URL = celo.rpcUrls.default.http[0] || "";
-const FALLBACK_EXPLORER_URL = celo.blockExplorers.default.url;
+const FALLBACK_CHAIN_ID = baseSepolia.id;
+const FALLBACK_RPC_URL = baseSepolia.rpcUrls.default.http[0] || "";
+const FALLBACK_EXPLORER_URL = baseSepolia.blockExplorers.default.url;
 
 function buildCeloWagmiChain(): Chain {
   const chainId =
@@ -14,7 +14,7 @@ function buildCeloWagmiChain(): Chain {
 
   return {
     id: chainId,
-    name: CELO_CHAIN.chainName || celo.name,
+    name: CELO_CHAIN.chainName || "Base Sepolia",
     nativeCurrency: {
       name: CELO_CHAIN.nativeCurrency.name,
       symbol: CELO_CHAIN.nativeCurrency.symbol,
@@ -27,12 +27,12 @@ function buildCeloWagmiChain(): Chain {
     blockExplorers: explorerUrl
       ? {
           default: {
-            name: "Celo Explorer",
+            name: "Chain Explorer",
             url: explorerUrl,
           },
         }
       : undefined,
-    testnet: chainId !== celo.id,
+    testnet: chainId === baseSepolia.id,
   };
 }
 
@@ -44,7 +44,7 @@ export const projectId = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID || "demo-proje
 
 export const appKitMetadata = {
   name: "Pass Chick",
-  description: "Crossy chicken game with fixed-stake paid runs on Celo.",
+  description: "Crossy chicken game with fixed-stake paid runs on Base.",
   url: "http://localhost:3000",
   icons: ["https://avatars.githubusercontent.com/u/37784886"],
 };
