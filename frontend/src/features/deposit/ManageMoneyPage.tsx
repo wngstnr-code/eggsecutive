@@ -67,20 +67,18 @@ export function ManageMoneyPage() {
 
   const quickAmounts = useMemo<QuickAmountPreset[]>(() => {
     const presets: QuickAmountPreset[] = [
-      { label: "0.0001 USDC", value: "0.0001" },
-      { label: "0.0005 USDC", value: "0.0005" },
-      { label: "0.0010 USDC", value: "0.001" },
-      { label: "0.0025 USDC", value: "0.0025" },
-      { label: "0.0050 USDC", value: "0.005" },
-      { label: "0.0100 USDC", value: "0.01" },
+      { label: "$10", value: "10" },
+      { label: "$25", value: "25" },
+      { label: "$50", value: "50" },
+      { label: "$100", value: "100" },
     ];
 
     if (walletPreset) {
-      presets.push({ label: "WALLET MAX", value: walletPreset });
+      presets.push({ label: "$WALLET MAX", value: walletPreset });
     }
 
     if (vaultPreset) {
-      presets.push({ label: "VAULT MAX", value: vaultPreset });
+      presets.push({ label: "$VAULT MAX", value: vaultPreset });
     }
 
     return presets;
@@ -190,15 +188,15 @@ export function ManageMoneyPage() {
               </div>
               <div className="money-status-row">
                 <span>Wallet Balance</span>
-                <strong>{flow.walletBalanceDisplay} USDC</strong>
+                <strong>{flow.walletBalanceDisplay === "-" ? "-" : `$${flow.walletBalanceDisplay}`}</strong>
               </div>
               <div className="money-status-row">
                 <span>Vault Available</span>
-                <strong>{flow.availableBalanceDisplay} USDC</strong>
+                <strong>{flow.availableBalanceDisplay === "-" ? "-" : `$${flow.availableBalanceDisplay}`}</strong>
               </div>
               <div className="money-status-row">
                 <span>Vault Locked</span>
-                <strong>{flow.lockedBalanceDisplay} USDC</strong>
+                <strong>{flow.lockedBalanceDisplay === "-" ? "-" : `$${flow.lockedBalanceDisplay}`}</strong>
               </div>
               <div className="money-status-row">
                 <span>Approval State</span>
@@ -235,8 +233,8 @@ export function ManageMoneyPage() {
                 className="flow-input money-input"
                 type="number"
                 min="0"
-                step="0.0001"
-                placeholder="0.0000"
+                step="0.01"
+                placeholder="10.00"
                 value={flow.amount}
                 onChange={(event: ChangeEvent<HTMLInputElement>) =>
                   flow.setAmount(event.target.value)

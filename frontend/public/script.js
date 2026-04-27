@@ -298,7 +298,7 @@ function saveBalance() {
 
 function formatUsdAmount(amount) {
   const value = Number(amount || 0);
-  return "$" + value.toFixed(4);
+  return "$" + value.toFixed(2);
 }
 
 function formatSignedUsdAmount(amount) {

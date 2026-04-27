@@ -688,7 +688,7 @@ export function PlayTopNav() {
           <div className="play-nav-balance-chip" aria-live="polite">
             <span className="play-nav-balance-label">BALANCE</span>
             <strong id="balance-mobile" className="play-nav-balance-value">
-              $0.0000
+              $0.00
             </strong>
           </div>
             <div className="play-nav-actions">
@@ -865,6 +865,15 @@ export function PlayTopNav() {
               </div>
           </div>
         </div>
+        <button
+          type="button"
+          className={`play-nav-deposit${isDepositBusy ? " busy" : ""}`}
+          onClick={openDepositModal}
+          disabled={isDepositBusy}
+          data-menu-open={isMenuOpen}
+        >
+          {depositLabel}
+        </button>
           <div className={`play-bottom-navbar${isMenuOpen ? " hidden" : ""}`}>
             <button
               type="button"

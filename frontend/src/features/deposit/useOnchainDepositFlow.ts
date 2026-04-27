@@ -93,17 +93,17 @@ function formatUsdcAmount(value: bigint | undefined) {
   const formatted = formatUnits(value, USDC_DECIMALS);
   const numeric = Number(formatted);
   if (!Number.isFinite(numeric)) return formatted;
-  return numeric.toFixed(4);
+  return numeric.toFixed(2);
 }
 
 export function useOnchainDepositFlow(): DepositFlowViewModel {
   const { account, isMiniPay, isAppChain, ensureBackendSession } = useWallet();
   const [amount, setAmount] = useState(() => {
     if (typeof window === "undefined") {
-      return "0.0001";
+      return "10";
     }
 
-    return new URLSearchParams(window.location.search).get("amount") || "0.0001";
+    return new URLSearchParams(window.location.search).get("amount") || "10";
   });
   const [statusMessage, setStatusMessage] = useState("");
   const [uiError, setUiError] = useState("");

@@ -348,8 +348,8 @@ function toNumberAmount(value: bigint) {
 }
 
 function formatUsdcDisplayAmount(value: number) {
-  if (!Number.isFinite(value)) return "0.0000";
-  return value.toFixed(4);
+  if (!Number.isFinite(value)) return "0.00";
+  return value.toFixed(2);
 }
 
 function rejectPendingRequest<T>(

@@ -7,7 +7,7 @@ import type { DepositFlowViewModel } from "./types";
 
 export function useBackendDepositFlow(): DepositFlowViewModel {
   const { account, isMiniPay, isAppChain } = useWallet();
-  const [amount, setAmount] = useState("0.0001");
+  const [amount, setAmount] = useState("10");
 
   const isConnected = Boolean(account);
   const hasBackendConfig = hasBackendApiConfig();
