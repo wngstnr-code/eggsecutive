@@ -4,6 +4,9 @@ const minTileIndex = -8;
 const maxTileIndex = 8;
 const tilesPerRow = maxTileIndex - minTileIndex + 1;
 const tileSize = 42;
+const MAX_CONSECUTIVE_ROAD_ROWS = 4;
+let pendingRoadRowsInSegment = 0;
+let consecutiveRoadRows = 0;
 
 // ============================================================
 // BETTING SYSTEM
@@ -1152,15 +1155,20 @@ function Camera() {
     width / 2, // right
     height / 2, // top
     height / -2, // bottom
-    100, // near
-    900, // far
+    1, // near
+    3000, // far
   );
 
   camera.up.set(0, 0, 1);
-  camera.position.set(300, -300, 300);
-  camera.lookAt(0, 0, 0);
+  applyCameraPose(camera, isMobile);
 
   return camera;
+}
+
+function applyCameraPose(camera, isMobile = window.innerWidth <= 768) {
+  // Keep desktop and mobile aligned to the same camera angle.
+  camera.position.set(190, -420, 370);
+  camera.lookAt(-108, 250, -100);
 }
 
 function Texture(width, height, rects) {
@@ -1539,6 +1547,8 @@ function initializeMap() {
   // Remove all rows
   metadata.length = 0;
   map.remove(...map.children);
+  pendingRoadRowsInSegment = 0;
+  consecutiveRoadRows = 0;
 
   // Add new rows
   for (let rowIndex = 0; rowIndex > -10; rowIndex--) {
@@ -2110,12 +2120,42 @@ function generateRows(amount, startIndex) {
 function generateRow(rowIndex) {
   // Force grass row at every checkpoint position
   if (rowIndex > 0 && rowIndex % CP_INTERVAL === 0) {
+    pendingRoadRowsInSegment = 0;
+    consecutiveRoadRows = 0;
     return generateCheckpointMetadata();
   }
-  const type = randomElement(["car", "truck", "forest"]);
-  if (type === "car") return generateCarLaneMetadata();
-  if (type === "truck") return generateTruckLaneMetadata();
+
+  // Hard rule: after 4 consecutive road rows, next row must be grass.
+  if (consecutiveRoadRows >= MAX_CONSECUTIVE_ROAD_ROWS) {
+    pendingRoadRowsInSegment = 0;
+    consecutiveRoadRows = 0;
+    return generateForesMetadata();
+  }
+
+  if (pendingRoadRowsInSegment > 0) {
+    pendingRoadRowsInSegment -= 1;
+    consecutiveRoadRows += 1;
+    return generateRoadLaneMetadata();
+  }
+
+  const shouldStartRoadSegment = Math.random() < 0.65;
+  if (shouldStartRoadSegment) {
+    const maxLength = Math.max(1, MAX_CONSECUTIVE_ROAD_ROWS - consecutiveRoadRows);
+    const segmentLength = THREE.MathUtils.randInt(1, maxLength);
+    // We generate one row now, and keep the rest for upcoming rows.
+    pendingRoadRowsInSegment = Math.max(0, segmentLength - 1);
+    consecutiveRoadRows += 1;
+    return generateRoadLaneMetadata();
+  }
+
+  consecutiveRoadRows = 0;
   return generateForesMetadata();
+}
+
+function generateRoadLaneMetadata() {
+  return Math.random() < 0.5
+    ? generateCarLaneMetadata()
+    : generateTruckLaneMetadata();
 }
 
 function generateCheckpointMetadata() {
@@ -3646,8 +3686,7 @@ window.addEventListener("resize", () => {
   camera.bottom = height / -2;
   camera.updateProjectionMatrix();
 
-  camera.position.set(300, -300, 300);
-  camera.lookAt(0, 0, 0);
+  applyCameraPose(camera, isMobile);
 
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(window.devicePixelRatio);
