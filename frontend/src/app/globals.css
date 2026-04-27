@@ -6770,6 +6770,7 @@ canvas.game {
   }
 
   .play-nav-actions {
+    display: flex;
     gap: 6px;
     z-index: 2;
   }

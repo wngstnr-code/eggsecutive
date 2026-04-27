@@ -43,7 +43,7 @@ export const appKitNetworks: [Chain, ...Chain[]] = [appWagmiChain];
 export const projectId = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID || "demo-project-id";
 
 export const appKitMetadata = {
-  name: "Pass Chick",
+  name: "Eggsecutive",
   description: "Crossy chicken game with fixed-stake paid runs on Base.",
   url: "http://localhost:3000",
   icons: ["https://avatars.githubusercontent.com/u/37784886"],

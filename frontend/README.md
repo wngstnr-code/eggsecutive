@@ -1,6 +1,6 @@
-# Pass Chick Frontend
+# Eggsecutive Frontend
 
-The Pass Chick frontend is a Next.js application that handles:
+The Eggsecutive frontend is a Next.js application that handles:
 
 - wallet connection
 - SIWE authentication against the backend

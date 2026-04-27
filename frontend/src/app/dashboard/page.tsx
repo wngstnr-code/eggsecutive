@@ -127,7 +127,7 @@ export default function DashboardPage() {
             <span className="home-brand-badge">GM</span>
             <span className="home-brand-copy">
               <p className="home-brand-eyebrow">Base Arcade Risk Game</p>
-              <span className="home-brand-name">Pass Chick</span>
+              <span className="home-brand-name">Eggsecutive</span>
             </span>
           </Link>
 
@@ -234,7 +234,7 @@ export default function DashboardPage() {
           {showMiniPayCallout ? (
             <p className="flow-alert">{MINIPAY_UNSUPPORTED_CHAIN_MESSAGE}</p>
           ) : null}
-          <div className="dashboard-title" aria-label="Pass Chick">
+          <div className="dashboard-title" aria-label="Eggsecutive">
             <span className="dashboard-title-line">CHICKEN</span>
             <span className="dashboard-title-line">BASE</span>
           </div>

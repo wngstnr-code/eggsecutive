@@ -1,6 +1,6 @@
-# Pass Chick Backend
+# Eggsecutive Backend
 
-The Pass Chick backend powers the server-authoritative game flow and authentication.
+The Eggsecutive backend powers the server-authoritative game flow and authentication.
 
 Main responsibilities:
 

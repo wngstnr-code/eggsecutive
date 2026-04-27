@@ -1,6 +1,6 @@
-# Pass Chick Smart Contracts
+# Eggsecutive Smart Contracts
 
-This package contains the backend-authoritative onchain flow for Pass Chick on Base Sepolia.
+This package contains the backend-authoritative onchain flow for Eggsecutive on Base Sepolia.
 All contracts are deployed as UUPS proxies (`ERC1967Proxy` + separate implementations).
 
 Included contracts:

@@ -468,7 +468,7 @@ export function WalletProvider({ children }: WalletProviderProps) {
       const domain = window.location.host;
       const origin = window.location.origin;
       const chainIdToUse = chainId || APP_CHAIN.chainIdDecimal || 42220;
-      const statement = "Sign in to Pass Chick backend.";
+      const statement = "Sign in to Eggsecutive backend.";
       const siweMessage = new SiweMessage({
         domain,
         address: account,
