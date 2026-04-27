@@ -247,13 +247,30 @@ async function crashAndPersistSession(params: {
     outcome: SETTLEMENT_OUTCOME.CRASHED,
   });
 
+  let settlementTxHash: string | null = null;
+  try {
+    settlementTxHash = await submitSettlementOnchain({
+      resolution: settlement.resolution,
+      signature: settlement.signature,
+    });
+  } catch (submitError) {
+    if (isAlreadySettledLikeError(submitError)) {
+      settlementTxHash = "already-settled-onchain";
+    } else {
+      console.error(
+        `❌ Failed to submit crash settlement for ${params.onchainSessionId}:`,
+        submitError,
+      );
+    }
+  }
+
   const updates: Record<string, unknown> = {
     status: "CRASHED",
     final_multiplier: params.finalMultiplier ?? 0,
     payout_amount: 0,
     settlement_signature: settlement.signature,
     settlement_deadline: settlement.resolution.deadline,
-    settlement_tx_hash: null,
+    settlement_tx_hash: settlementTxHash,
     ended_at: new Date().toISOString(),
   };
 

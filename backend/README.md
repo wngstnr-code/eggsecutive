@@ -77,6 +77,7 @@ MINIPAY_UNVERIFIED_AUTH_ENABLED=true
 - `GAME_VAULT_ADDRESS=` set this to your active Base Sepolia vault address
 - `GAME_SETTLEMENT_ADDRESS=` set this to your active Base Sepolia settlement address
 - `TRUST_PASSPORT_ADDRESS=` set this to your active Base Sepolia passport address
+- `FAUCET_CONTRACT_ADDRESS=` set this to your active Base Sepolia faucet address
 
 The backend signer must stay in sync with the onchain signer used by:
 

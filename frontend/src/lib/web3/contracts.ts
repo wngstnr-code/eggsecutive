@@ -11,6 +11,8 @@ export const GAME_SETTLEMENT_ADDRESS: string =
   process.env.NEXT_PUBLIC_GAME_SETTLEMENT_ADDRESS || "";
 export const TRUST_PASSPORT_ADDRESS: string =
   process.env.NEXT_PUBLIC_TRUST_PASSPORT_ADDRESS || "";
+export const USDC_FAUCET_ADDRESS: string =
+  process.env.NEXT_PUBLIC_USDC_FAUCET_ADDRESS || "";
 
 export const ERC20_ABI = [
   {
@@ -234,6 +236,16 @@ export const TRUST_PASSPORT_ABI = [
   },
 ] as const;
 
+export const USDC_FAUCET_ABI = [
+  {
+    type: "function",
+    name: "claim",
+    stateMutability: "nonpayable",
+    inputs: [],
+    outputs: [],
+  },
+] as const;
+
 export function hasDepositContractConfig() {
   return Boolean(
     isAddress(USDC_ADDRESS) &&
@@ -251,4 +263,8 @@ export function hasGameContractConfig() {
 
 export function hasPassportContractConfig() {
   return Boolean(isAddress(TRUST_PASSPORT_ADDRESS));
+}
+
+export function hasFaucetContractConfig() {
+  return Boolean(isAddress(USDC_FAUCET_ADDRESS));
 }

@@ -136,9 +136,19 @@ Frontend-facing proxy outputs:
 
 ```bash
 NEXT_PUBLIC_USDC_ADDRESS=<deployed_game_usdc>
+NEXT_PUBLIC_USDC_FAUCET_ADDRESS=<deployed_usdc_faucet>
 NEXT_PUBLIC_GAME_VAULT_ADDRESS=<deployed_game_vault>
 NEXT_PUBLIC_GAME_SETTLEMENT_ADDRESS=<deployed_game_settlement>
 NEXT_PUBLIC_TRUST_PASSPORT_ADDRESS=<deployed_trust_passport>
+```
+
+Backend-facing env outputs:
+
+```bash
+GAME_VAULT_ADDRESS=<deployed_game_vault>
+GAME_SETTLEMENT_ADDRESS=<deployed_game_settlement>
+TRUST_PASSPORT_ADDRESS=<deployed_trust_passport>
+FAUCET_CONTRACT_ADDRESS=<deployed_usdc_faucet>
 ```
 
 ## Verification

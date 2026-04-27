@@ -25,7 +25,7 @@ The Pass Chick frontend is a Next.js application that handles:
 
 - The frontend now detects MiniPay and auto-reads the injected wallet in the browser.
 - MiniPay users now create a backend session without SIWE message signing, because MiniPay does not support that flow.
-- This build now targets Base Sepolia and includes a backend-powered faucet request flow for testnet.
+- This build now targets Base Sepolia and includes a wallet-direct faucet claim flow for testnet.
 - For local MiniPay testing, run `npm run dev`, expose port `3000` with `ngrok http 3000`, then load the HTTPS URL from MiniPay's Test Page.
 
 ## Commands
@@ -51,6 +51,7 @@ NEXT_PUBLIC_CHAIN_NATIVE_SYMBOL=ETH
 NEXT_PUBLIC_CHAIN_NATIVE_DECIMALS=18
 
 NEXT_PUBLIC_USDC_ADDRESS=0x...
+NEXT_PUBLIC_USDC_FAUCET_ADDRESS=0x...
 NEXT_PUBLIC_GAME_VAULT_ADDRESS=0x...
 NEXT_PUBLIC_GAME_SETTLEMENT_ADDRESS=0x...
 NEXT_PUBLIC_TRUST_PASSPORT_ADDRESS=0x...
@@ -68,6 +69,7 @@ NEXT_PUBLIC_REOWN_PROJECT_ID=your_reown_project_id
 ## Current Contract Wiring
 
 - `NEXT_PUBLIC_USDC_ADDRESS=` set this to your active Base Sepolia USDC address
+- `NEXT_PUBLIC_USDC_FAUCET_ADDRESS=` set this to your active Base Sepolia faucet address
 - `NEXT_PUBLIC_GAME_VAULT_ADDRESS=` set this to your active Base Sepolia vault address
 - `NEXT_PUBLIC_GAME_SETTLEMENT_ADDRESS=` set this to your active Base Sepolia settlement address
 - `NEXT_PUBLIC_TRUST_PASSPORT_ADDRESS=` set this to your active Base Sepolia passport address

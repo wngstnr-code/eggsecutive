@@ -1,7 +1,7 @@
 import type { Server as HttpServer } from "node:http";
 import { Server as SocketServer, type Socket } from "socket.io";
 import { v4 as uuidv4 } from "uuid";
-import { createPublicClient, http, isAddress, type Hex } from "viem";
+import { createPublicClient, http, isAddress, isHex, parseAbi, type Address, type Hex } from "viem";
 import { getWalletFromSocketCookies } from "../middleware/auth.js";
 import { env } from "../config/env.js";
 import { supabase } from "../config/supabase.js";
@@ -47,6 +47,11 @@ import { submitSettlementOnchain } from "../services/settlementExecutor.js";
 
 let io: SocketServer;
 const SIGN_SETTLEMENT_TIMEOUT_MS = 10_000;
+const ZERO_BYTES32 = `0x${"0".repeat(64)}`;
+const GAME_SETTLEMENT_READ_ABI = parseAbi([
+  "function activeSessionOf(address player) view returns (bytes32)",
+  "function getSession(bytes32 sessionId) view returns (address player, uint256 stakeAmount, uint64 startedAt, bool active, bool settled)",
+]);
 const gatewayPublicClient = createPublicClient({
   transport: http(env.RPC_URL),
 });
@@ -80,6 +85,106 @@ async function signSettlementWithTimeout(params: Parameters<typeof signSettlemen
       }, SIGN_SETTLEMENT_TIMEOUT_MS);
     }),
   ]);
+}
+
+function readGatewayErrorMessage(error: unknown) {
+  return String(
+    (error as { shortMessage?: string; message?: string })?.shortMessage ||
+      (error as { message?: string })?.message ||
+      "",
+  ).toLowerCase();
+}
+
+function isAlreadySettledLikeGatewayError(error: unknown) {
+  const raw = readGatewayErrorMessage(error);
+  return (
+    raw.includes("sessionalreadysettled") ||
+    raw.includes("sessionnotactive") ||
+    raw.includes("sessionnotfound")
+  );
+}
+
+function isZeroBytes32(value: string) {
+  return !isHex(value, { strict: true }) || /^0x0{64}$/i.test(value);
+}
+
+function usdcUnitsToNumber(amount: bigint) {
+  return Number(amount) / 1_000_000;
+}
+
+async function readActiveOnchainSession(walletAddress: string) {
+  const activeSessionId = await gatewayPublicClient.readContract({
+    address: env.GAME_SETTLEMENT_ADDRESS as Address,
+    abi: GAME_SETTLEMENT_READ_ABI,
+    functionName: "activeSessionOf",
+    args: [walletAddress as Address],
+  });
+
+  if (isZeroBytes32(activeSessionId)) {
+    return null;
+  }
+
+  const session = await gatewayPublicClient.readContract({
+    address: env.GAME_SETTLEMENT_ADDRESS as Address,
+    abi: GAME_SETTLEMENT_READ_ABI,
+    functionName: "getSession",
+    args: [activeSessionId],
+  });
+
+  const player = String(session[0] || "").toLowerCase();
+  const stakeAmountUnits = BigInt(session[1] ?? 0n);
+  const active = Boolean(session[3]);
+  const settled = Boolean(session[4]);
+
+  if (player !== walletAddress.toLowerCase() || !active || settled) {
+    return null;
+  }
+
+  return {
+    sessionId: activeSessionId,
+    player: player as Address,
+    stakeAmountUnits,
+  };
+}
+
+async function clearActiveOnchainSession(walletAddress: string) {
+  const activeOnchainSession = await readActiveOnchainSession(walletAddress);
+  if (!activeOnchainSession) {
+    return null;
+  }
+
+  try {
+    const settlementResult = await signSettlementWithTimeout({
+      playerAddress: walletAddress,
+      onchainSessionId: activeOnchainSession.sessionId,
+      stakeAmount: usdcUnitsToNumber(activeOnchainSession.stakeAmountUnits),
+      payoutAmount: 0,
+      finalMultiplierBp: 0,
+      outcome: SETTLEMENT_OUTCOME.CRASHED,
+    });
+
+    const settlementTxHash = await submitSettlementOnchain({
+      resolution: settlementResult.resolution,
+      signature: settlementResult.signature,
+    });
+
+    return {
+      settlementResult,
+      settlementTxHash,
+    };
+  } catch (error) {
+    if (isAlreadySettledLikeGatewayError(error)) {
+      const stillActive = await readActiveOnchainSession(walletAddress).catch(() => null);
+      if (!stillActive) {
+        return {
+          settlementResult: null,
+          settlementTxHash: "already-settled-onchain",
+        };
+      }
+    }
+
+    throw error;
+  }
 }
 
 function getWalletFromSocketHandshake(socket: Socket): string | null {
@@ -179,36 +284,51 @@ async function handleGameStart(socket: Socket, walletAddress: string, stake: num
     .eq("status", "ACTIVE")
     .maybeSingle();
 
+  let staleSettlementSignature: string | null = null;
+  let staleSettlementDeadline: string | null = null;
+  let staleSettlementTxHash: string | null = null;
+
+  try {
+    const onchainCleanup = await clearActiveOnchainSession(walletAddress);
+    staleSettlementSignature = onchainCleanup?.settlementResult?.signature ?? null;
+    staleSettlementDeadline = onchainCleanup?.settlementResult?.resolution.deadline ?? null;
+    staleSettlementTxHash = onchainCleanup?.settlementTxHash ?? null;
+  } catch (onchainCleanupError) {
+    console.error("❌ Failed to clear previous on-chain session before starting a new run:", onchainCleanupError);
+    socket.emit("game:error", {
+      message:
+        "Previous on-chain session could not be resolved. Submit or recover the last settlement first.",
+    });
+    return;
+  }
+
   if (stale) {
     console.log(`🧹 Cleaning up stale session: ${stale.session_id}`);
-    try {
-      const signed = await signSettlementWithTimeout({
-        playerAddress: walletAddress,
-        onchainSessionId: stale.onchain_session_id,
-        stakeAmount: stale.stake_amount,
-        payoutAmount: 0,
-        finalMultiplierBp: 0,
-        outcome: SETTLEMENT_OUTCOME.CRASHED,
-      });
+    await supabase
+      .from("game_sessions")
+      .update({
+        status: "CRASHED",
+        ended_at: new Date().toISOString(),
+        final_multiplier: 0,
+        payout_amount: 0,
+        settlement_signature: staleSettlementSignature,
+        settlement_deadline: staleSettlementDeadline,
+        settlement_tx_hash: staleSettlementTxHash,
+      })
+      .eq("session_id", stale.session_id);
+  }
 
-      await supabase
-        .from("game_sessions")
-        .update({
-          status: "CRASHED",
-          ended_at: new Date().toISOString(),
-          final_multiplier: 0,
-          payout_amount: 0,
-          settlement_signature: signed.signature,
-          settlement_deadline: signed.resolution.deadline,
-        })
-        .eq("session_id", stale.session_id);
-    } catch (err) {
-      console.error("❌ Failed to sign stale session cleanup:", err);
-      await supabase
-        .from("game_sessions")
-        .update({ status: "CRASHED", ended_at: new Date().toISOString() })
-        .eq("session_id", stale.session_id);
-    }
+  const remainingActiveOnchainSession = await readActiveOnchainSession(walletAddress).catch((error) => {
+    console.error("❌ Failed to verify on-chain session state before starting a new run:", error);
+    return null;
+  });
+
+  if (remainingActiveOnchainSession) {
+    socket.emit("game:error", {
+      message:
+        "There is still an active on-chain session for this wallet. Resolve the previous run first.",
+    });
+    return;
   }
 
   const sessionId = uuidv4();

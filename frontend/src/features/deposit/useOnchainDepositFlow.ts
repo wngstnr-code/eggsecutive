@@ -11,15 +11,16 @@ import {
   useWriteContract,
 } from "wagmi";
 import { useWallet } from "~/components/web3/WalletProvider";
-import { backendPost } from "~/lib/backend/api";
-import { hasBackendApiConfig } from "~/lib/backend/config";
 import {
   ERC20_ABI,
   GAME_VAULT_ABI,
   GAME_VAULT_ADDRESS,
+  USDC_FAUCET_ABI,
+  USDC_FAUCET_ADDRESS,
   USDC_ADDRESS,
   USDC_DECIMALS,
   hasDepositContractConfig,
+  hasFaucetContractConfig,
 } from "~/lib/web3/contracts";
 import { MINIPAY_UNSUPPORTED_CHAIN_MESSAGE } from "~/lib/web3/minipay";
 import { explorerTxUrl } from "~/lib/web3/chain";
@@ -97,7 +98,7 @@ function formatUsdcAmount(value: bigint | undefined) {
 }
 
 export function useOnchainDepositFlow(): DepositFlowViewModel {
-  const { account, isMiniPay, isAppChain, ensureBackendSession } = useWallet();
+  const { account, isMiniPay, isAppChain } = useWallet();
   const [amount, setAmount] = useState(() => {
     if (typeof window === "undefined") {
       return "10";
@@ -120,7 +121,11 @@ export function useOnchainDepositFlow(): DepositFlowViewModel {
   const vaultAddress = isAddress(GAME_VAULT_ADDRESS)
     ? (GAME_VAULT_ADDRESS as Address)
     : undefined;
+  const faucetAddress = isAddress(USDC_FAUCET_ADDRESS)
+    ? (USDC_FAUCET_ADDRESS as Address)
+    : undefined;
   const hasValidContracts = hasDepositContractConfig();
+  const hasValidFaucetContract = hasFaucetContractConfig();
   const canTransact = Boolean(
     isConnected && isAppChain && ownerAddress && usdcAddress && vaultAddress
   );
@@ -212,6 +217,13 @@ export function useOnchainDepositFlow(): DepositFlowViewModel {
   } = useWriteContract();
 
   const {
+    writeContractAsync: claimFaucetAsync,
+    data: faucetClaimTxHash,
+    isPending: isFaucetSubmitting,
+    error: faucetWriteError,
+  } = useWriteContract();
+
+  const {
     isLoading: isApproveConfirming,
     isSuccess: isApproveConfirmed,
     error: approveConfirmError,
@@ -233,6 +245,14 @@ export function useOnchainDepositFlow(): DepositFlowViewModel {
     error: withdrawConfirmError,
   } = useWaitForTransactionReceipt({
     hash: withdrawTxHash as Hash | undefined,
+  });
+
+  const {
+    isLoading: isFaucetConfirming,
+    isSuccess: isFaucetConfirmed,
+    error: faucetConfirmError,
+  } = useWaitForTransactionReceipt({
+    hash: faucetClaimTxHash as Hash | undefined,
   });
 
   const allowance = allowanceData ?? 0n;
@@ -288,6 +308,16 @@ export function useOnchainDepositFlow(): DepositFlowViewModel {
     withdrawTxHash,
   ]);
 
+  useEffect(() => {
+    if (!isFaucetConfirmed || !faucetClaimTxHash || faucetClaimTxHash === faucetTxHash) return;
+
+    setFaucetTxHash(faucetClaimTxHash);
+    setUiError("");
+    setStatusMessage("Faucet claim confirmed on-chain.");
+    setFaucetCooldownSeconds(0);
+    void refetchWalletBalance();
+  }, [faucetClaimTxHash, faucetTxHash, isFaucetConfirmed, refetchWalletBalance]);
+
   const errorMessage = useMemo(() => {
     if (uiError) return uiError;
     return (
@@ -296,13 +326,17 @@ export function useOnchainDepositFlow(): DepositFlowViewModel {
       toUserFacingError(depositWriteError, "") ||
       toUserFacingError(depositConfirmError, "") ||
       toUserFacingError(withdrawWriteError, "") ||
-      toUserFacingError(withdrawConfirmError, "")
+      toUserFacingError(withdrawConfirmError, "") ||
+      toUserFacingError(faucetWriteError, "") ||
+      toUserFacingError(faucetConfirmError, "")
     );
   }, [
     approveConfirmError,
     approveWriteError,
     depositConfirmError,
     depositWriteError,
+    faucetConfirmError,
+    faucetWriteError,
     uiError,
     withdrawConfirmError,
     withdrawWriteError,
@@ -437,8 +471,8 @@ export function useOnchainDepositFlow(): DepositFlowViewModel {
       setUiError(`Wrong network. Switch wallet to ${APP_CHAIN.chainName} first.`);
       return;
     }
-    if (!hasBackendApiConfig()) {
-      setUiError("Faucet requires backend API. Set NEXT_PUBLIC_BACKEND_API_URL first.");
+    if (!faucetAddress || !hasValidFaucetContract) {
+      setUiError("Faucet contract config is invalid. Fill NEXT_PUBLIC_USDC_FAUCET_ADDRESS first.");
       return;
     }
 
@@ -447,28 +481,16 @@ export function useOnchainDepositFlow(): DepositFlowViewModel {
     setIsFaucetBusy(true);
 
     try {
-      const authenticated = await ensureBackendSession();
-      if (!authenticated) {
-        setUiError("Failed to authenticate backend session for faucet request.");
-        return;
-      }
+      setFaucetTxHash("");
+      setFaucetCooldownSeconds(0);
+      setStatusMessage("Submitting faucet claim on-chain...");
 
-      const response = await backendPost<{
-        success: boolean;
-        txHash: string;
-        cooldownSeconds?: number;
-      }>("/api/faucet/request");
-
-      const txHash = String(response.txHash || "");
-      if (!txHash) {
-        setUiError("Faucet request completed but tx hash is missing.");
-        return;
-      }
-
-      setFaucetTxHash(txHash);
-      setFaucetCooldownSeconds(Number(response.cooldownSeconds || 0));
-      setStatusMessage("Faucet transaction submitted.");
-      void refetchWalletBalance();
+      await claimFaucetAsync({
+        address: faucetAddress,
+        abi: USDC_FAUCET_ABI,
+        functionName: "claim",
+        args: [],
+      });
     } catch (faucetError) {
       setUiError(toUserFacingError(faucetError, "Failed to request faucet."));
     } finally {
@@ -479,11 +501,13 @@ export function useOnchainDepositFlow(): DepositFlowViewModel {
   const approveTxUrl = approveTxHash ? explorerTxUrl(approveTxHash) : "";
   const depositTxUrl = depositTxHash ? explorerTxUrl(depositTxHash) : "";
   const withdrawTxUrl = withdrawTxHash ? explorerTxUrl(withdrawTxHash) : "";
-  const faucetTxUrl = faucetTxHash ? explorerTxUrl(faucetTxHash) : "";
+  const latestFaucetTxHash = faucetClaimTxHash || faucetTxHash;
+  const faucetTxUrl = latestFaucetTxHash ? explorerTxUrl(latestFaucetTxHash) : "";
 
   const isApproveBusy = isApproveSubmitting || isApproveConfirming;
   const isDepositBusy = isDepositSubmitting || isDepositConfirming;
   const isWithdrawBusy = isWithdrawSubmitting || isWithdrawConfirming;
+  const isFaucetBusyCombined = isFaucetBusy || isFaucetSubmitting || isFaucetConfirming;
   const disableApproveButton =
     !canTransact || !parsedAmount || !needsApproval || isApproveBusy || isDepositBusy || isWithdrawBusy;
   const disableDepositButton =
@@ -498,10 +522,11 @@ export function useOnchainDepositFlow(): DepositFlowViewModel {
   const disableFaucetButton =
     !isConnected ||
     !isAppChain ||
+    !faucetAddress ||
     isApproveBusy ||
     isDepositBusy ||
     isWithdrawBusy ||
-    isFaucetBusy;
+    isFaucetBusyCombined;
 
   const configMessage = isMiniPay
     ? MINIPAY_UNSUPPORTED_CHAIN_MESSAGE
@@ -546,7 +571,7 @@ export function useOnchainDepositFlow(): DepositFlowViewModel {
     isApproveBusy,
     isDepositBusy,
     isWithdrawBusy,
-    isFaucetBusy,
+    isFaucetBusy: isFaucetBusyCombined,
     disableApproveButton,
     disableDepositButton,
     disableWithdrawButton,

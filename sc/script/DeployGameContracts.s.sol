@@ -194,8 +194,13 @@ contract DeployGameContracts is Script {
         console2.log("GameSettlement proxy:", deployments.settlementProxy);
         console2.log("TrustPassport proxy:", deployments.passportProxy);
         console2.log("NEXT_PUBLIC_USDC_ADDRESS=%s", deployments.tokenProxy);
+        console2.log("NEXT_PUBLIC_USDC_FAUCET_ADDRESS=%s", deployments.faucetProxy);
         console2.log("NEXT_PUBLIC_GAME_VAULT_ADDRESS=%s", deployments.vaultProxy);
         console2.log("NEXT_PUBLIC_GAME_SETTLEMENT_ADDRESS=%s", deployments.settlementProxy);
         console2.log("NEXT_PUBLIC_TRUST_PASSPORT_ADDRESS=%s", deployments.passportProxy);
+        console2.log("GAME_VAULT_ADDRESS=%s", deployments.vaultProxy);
+        console2.log("GAME_SETTLEMENT_ADDRESS=%s", deployments.settlementProxy);
+        console2.log("TRUST_PASSPORT_ADDRESS=%s", deployments.passportProxy);
+        console2.log("FAUCET_CONTRACT_ADDRESS=%s", deployments.faucetProxy);
     }
 }
