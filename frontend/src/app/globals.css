@@ -691,6 +691,33 @@ canvas.game {
   filter: brightness(1.06);
 }
 
+.home-help-stack {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 30;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.home-help-stack .fixed-help {
+  position: relative;
+  right: auto;
+  bottom: auto;
+}
+
+.home-help-doc-btn {
+  text-decoration: none;
+}
+
+.home-help-doc-icon {
+  width: 28px;
+  height: 28px;
+  display: block;
+  transform: translateX(0.5px);
+}
+
 .home-modal-overlay,
 .info-modal-overlay {
   position: fixed;
@@ -954,6 +981,21 @@ canvas.game {
     right: 12px;
     bottom: 12px;
     font-size: 20px;
+  }
+
+  .home-help-stack {
+    right: 12px;
+    bottom: 12px;
+    gap: 8px;
+  }
+
+  .home-help-doc-btn {
+    font-size: inherit;
+  }
+
+  .home-help-doc-icon {
+    width: 18px;
+    height: 18px;
   }
 
   .home-modal-box,

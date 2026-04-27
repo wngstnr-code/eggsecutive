@@ -866,14 +866,54 @@ export default function Home() {
         </div>
       )}
 
-      <button
-        className="home-help-btn fixed-help"
-        type="button"
-        onClick={() => setShowHelp(true)}
-        title="How to Play"
-      >
-        ?
-      </button>
+      <div className="home-help-stack" aria-label="Quick help links">
+        <a
+          className="home-help-btn fixed-help home-help-doc-btn"
+          href="https://eggsecutive.gitbook.io/eggsecutive/"
+          target="_blank"
+          rel="noreferrer"
+          title="Open Documentation"
+          aria-label="Open documentation"
+        >
+          <svg
+            className="home-help-doc-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <path
+              d="M8 3h6l4 4v12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M14 3v4h4"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M10 12h6M10 16h6"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+          </svg>
+        </a>
+        <button
+          className="home-help-btn fixed-help"
+          type="button"
+          onClick={() => setShowHelp(true)}
+          title="How to Play"
+          aria-label="How to play"
+        >
+          ?
+        </button>
+      </div>
     </main>
   );
 }
