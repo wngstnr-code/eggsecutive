@@ -63,8 +63,6 @@ export function PlayTopNav() {
     authenticateBackend,
     hasBackendApiConfig,
   } = useWallet();
-  const [depositLabel, setDepositLabel] = useState("DEPOSIT");
-  const [isDepositBusy, setIsDepositBusy] = useState(false);
   const [isWalletMenuOpen, setIsWalletMenuOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAlertsOpen, setIsAlertsOpen] = useState(false);
@@ -89,8 +87,8 @@ export function PlayTopNav() {
 
   const isConnected = Boolean(account);
 
-  function openDepositModal() {
-    window.dispatchEvent(new CustomEvent("chicken:open-deposit-modal"));
+  function onManageMoneyClick() {
+    window.location.href = "/managemoney";
   }
 
   function dispatchStatusUpdate(detail: {
@@ -309,26 +307,6 @@ export function PlayTopNav() {
       await authenticateBackend();
     }
   }
-
-  useEffect(() => {
-    function onDepositUiState(event: Event) {
-      const detail = (event as CustomEvent<{ label?: string; busy?: boolean }>)
-        .detail;
-      if (detail?.label) setDepositLabel(detail.label);
-      if (typeof detail?.busy === "boolean") setIsDepositBusy(detail.busy);
-    }
-
-    window.addEventListener(
-      "chicken:deposit-ui-state",
-      onDepositUiState as EventListener,
-    );
-    return () => {
-      window.removeEventListener(
-        "chicken:deposit-ui-state",
-        onDepositUiState as EventListener,
-      );
-    };
-  }, []);
 
   useEffect(() => {
     function onPlayBlocker(event: Event) {
@@ -867,21 +845,19 @@ export function PlayTopNav() {
         </div>
         <button
           type="button"
-          className={`play-nav-deposit${isDepositBusy ? " busy" : ""}`}
-          onClick={openDepositModal}
-          disabled={isDepositBusy}
+          className="play-nav-deposit"
+          onClick={onManageMoneyClick}
           data-menu-open={isMenuOpen}
         >
-          {depositLabel}
+          MANAGE MONEY
         </button>
           <div className={`play-bottom-navbar${isMenuOpen ? " hidden" : ""}`}>
             <button
               type="button"
-              className={`play-bottom-nav-item play-bottom-nav-deposit${isDepositBusy ? " busy" : ""}`}
-              onClick={openDepositModal}
-              disabled={isDepositBusy}
+              className="play-bottom-nav-item play-bottom-nav-deposit"
+              onClick={onManageMoneyClick}
             >
-              {depositLabel}
+              MANAGE MONEY
             </button>
             <button
               type="button"
