@@ -120,15 +120,6 @@ export function GameCanvas({ backgroundMode = false }: GameCanvasProps) {
         </div>
       </div>
 
-      <div id="controls">
-        <div>
-          <button id="forward">{"\u25B2"}</button>
-          <button id="left">{"\u25C0"}</button>
-          <button id="backward">{"\u25BC"}</button>
-          <button id="right">{"\u25B6"}</button>
-        </div>
-      </div>
-
       <div id="bet-panel" className="modal-bg">
         <div className="modal-box modal-box-bet">
           <button className="close-btn" id="bet-panel-close" aria-label="Close">
