@@ -2365,7 +2365,7 @@ canvas.game {
 }
 
 .play-passport-card::before {
-  content: "CELO";
+  content: "BASE";
   position: absolute;
   bottom: 14px;
   right: 14px;
@@ -2386,7 +2386,7 @@ canvas.game {
   background: rgba(255, 255, 255, 0.16);
 }
 
-.play-passport-card .play-passport-celo-logo {
+.play-passport-card .play-passport-base-logo {
   position: absolute;
   top: 12px;
   left: 16px;
@@ -3217,7 +3217,7 @@ canvas.game {
     gap: 8px;
   }
 
-  .play-passport-card .play-passport-celo-logo {
+  .play-passport-card .play-passport-base-logo {
     width: 34px;
     height: 34px;
     min-width: 34px;

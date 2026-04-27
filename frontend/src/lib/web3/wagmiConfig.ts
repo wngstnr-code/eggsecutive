@@ -1,24 +1,24 @@
 import type { Chain } from "viem";
 import { baseSepolia } from "viem/chains";
-import { CELO_CHAIN } from "./celo";
+import { APP_CHAIN } from "./chain";
 
 const FALLBACK_CHAIN_ID = baseSepolia.id;
 const FALLBACK_RPC_URL = baseSepolia.rpcUrls.default.http[0] || "";
 const FALLBACK_EXPLORER_URL = baseSepolia.blockExplorers.default.url;
 
-function buildCeloWagmiChain(): Chain {
+function buildAppWagmiChain(): Chain {
   const chainId =
-    CELO_CHAIN.chainIdDecimal > 0 ? CELO_CHAIN.chainIdDecimal : FALLBACK_CHAIN_ID;
-  const rpcUrl = CELO_CHAIN.rpcUrls[0] || FALLBACK_RPC_URL;
-  const explorerUrl = CELO_CHAIN.blockExplorerUrls[0] || FALLBACK_EXPLORER_URL;
+    APP_CHAIN.chainIdDecimal > 0 ? APP_CHAIN.chainIdDecimal : FALLBACK_CHAIN_ID;
+  const rpcUrl = APP_CHAIN.rpcUrls[0] || FALLBACK_RPC_URL;
+  const explorerUrl = APP_CHAIN.blockExplorerUrls[0] || FALLBACK_EXPLORER_URL;
 
   return {
     id: chainId,
-    name: CELO_CHAIN.chainName || "Base Sepolia",
+    name: APP_CHAIN.chainName || "Base Sepolia",
     nativeCurrency: {
-      name: CELO_CHAIN.nativeCurrency.name,
-      symbol: CELO_CHAIN.nativeCurrency.symbol,
-      decimals: CELO_CHAIN.nativeCurrency.decimals,
+      name: APP_CHAIN.nativeCurrency.name,
+      symbol: APP_CHAIN.nativeCurrency.symbol,
+      decimals: APP_CHAIN.nativeCurrency.decimals,
     },
     rpcUrls: {
       default: { http: [rpcUrl] },
@@ -36,9 +36,9 @@ function buildCeloWagmiChain(): Chain {
   };
 }
 
-export const celoWagmiChain = buildCeloWagmiChain();
+export const appWagmiChain = buildAppWagmiChain();
 
-export const appKitNetworks: [Chain, ...Chain[]] = [celoWagmiChain];
+export const appKitNetworks: [Chain, ...Chain[]] = [appWagmiChain];
 
 export const projectId = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID || "demo-project-id";
 

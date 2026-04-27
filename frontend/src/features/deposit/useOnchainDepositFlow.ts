@@ -22,8 +22,8 @@ import {
   hasDepositContractConfig,
 } from "~/lib/web3/contracts";
 import { MINIPAY_UNSUPPORTED_CHAIN_MESSAGE } from "~/lib/web3/minipay";
-import { explorerTxUrl } from "~/lib/web3/celo";
-import { CELO_CHAIN } from "~/lib/web3/celo";
+import { explorerTxUrl } from "~/lib/web3/chain";
+import { APP_CHAIN } from "~/lib/web3/chain";
 import type { DepositFlowViewModel } from "./types";
 
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000" as Address;
@@ -97,7 +97,7 @@ function formatUsdcAmount(value: bigint | undefined) {
 }
 
 export function useOnchainDepositFlow(): DepositFlowViewModel {
-  const { account, isMiniPay, isCeloChain, ensureBackendSession } = useWallet();
+  const { account, isMiniPay, isAppChain, ensureBackendSession } = useWallet();
   const [amount, setAmount] = useState(() => {
     if (typeof window === "undefined") {
       return "0.0001";
@@ -122,7 +122,7 @@ export function useOnchainDepositFlow(): DepositFlowViewModel {
     : undefined;
   const hasValidContracts = hasDepositContractConfig();
   const canTransact = Boolean(
-    isConnected && isCeloChain && ownerAddress && usdcAddress && vaultAddress
+    isConnected && isAppChain && ownerAddress && usdcAddress && vaultAddress
   );
 
   const parsedAmount = useMemo(() => {
@@ -433,8 +433,8 @@ export function useOnchainDepositFlow(): DepositFlowViewModel {
       setUiError("Connect wallet first before requesting faucet.");
       return;
     }
-    if (!isCeloChain) {
-      setUiError(`Wrong network. Switch wallet to ${CELO_CHAIN.chainName} first.`);
+    if (!isAppChain) {
+      setUiError(`Wrong network. Switch wallet to ${APP_CHAIN.chainName} first.`);
       return;
     }
     if (!hasBackendApiConfig()) {
@@ -497,7 +497,7 @@ export function useOnchainDepositFlow(): DepositFlowViewModel {
     isWithdrawBusy;
   const disableFaucetButton =
     !isConnected ||
-    !isCeloChain ||
+    !isAppChain ||
     isApproveBusy ||
     isDepositBusy ||
     isWithdrawBusy ||
@@ -507,8 +507,8 @@ export function useOnchainDepositFlow(): DepositFlowViewModel {
     ? MINIPAY_UNSUPPORTED_CHAIN_MESSAGE
     : !isConnected
       ? "Connect wallet first to manage vault balance."
-      : !isCeloChain
-        ? `Wrong network. Switch wallet to ${CELO_CHAIN.chainName} (${CELO_CHAIN.chainIdHex}).`
+      : !isAppChain
+        ? `Wrong network. Switch wallet to ${APP_CHAIN.chainName} (${APP_CHAIN.chainIdHex}).`
         : !hasValidContracts
           ? "Contract config is invalid. Fill valid USDC and vault addresses in `frontend/.env.local`."
           : "";
@@ -521,7 +521,7 @@ export function useOnchainDepositFlow(): DepositFlowViewModel {
     errorMessage,
     isConnected,
     isMiniPay,
-    isCeloChain,
+    isAppChain,
     canTransact,
     hasValidContracts,
     usdcAddress: USDC_ADDRESS,

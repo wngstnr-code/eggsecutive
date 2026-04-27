@@ -8,7 +8,7 @@ export type DepositFlowViewModel = {
   errorMessage: string;
   isConnected: boolean;
   isMiniPay: boolean;
-  isCeloChain: boolean;
+  isAppChain: boolean;
   canTransact: boolean;
   hasValidContracts: boolean;
   usdcAddress: string;

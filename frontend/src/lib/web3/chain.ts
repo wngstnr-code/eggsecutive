@@ -6,7 +6,7 @@ type NativeCurrency = {
   decimals: number;
 };
 
-export type CeloChainConfig = {
+export type AppChainConfig = {
   chainIdHex: string;
   chainIdDecimal: number;
   chainName: string;
@@ -65,7 +65,7 @@ const envBlockExplorerUrls = splitList(
   process.env.NEXT_PUBLIC_CHAIN_EXPLORER_URLS || "",
 );
 
-export const CELO_CHAIN: CeloChainConfig = {
+export const APP_CHAIN: AppChainConfig = {
   chainIdHex: parsedChainId.chainIdHex,
   chainIdDecimal: parsedChainId.chainIdDecimal,
   chainName,
@@ -86,19 +86,19 @@ export const CELO_CHAIN: CeloChainConfig = {
         : [],
 };
 
-export function hasCeloChainConfig() {
+export function hasAppChainConfig() {
   return Boolean(
-    CELO_CHAIN.chainIdHex &&
-      CELO_CHAIN.chainIdDecimal > 0 &&
-      CELO_CHAIN.chainName &&
-      CELO_CHAIN.rpcUrls.length > 0 &&
-      CELO_CHAIN.nativeCurrency.symbol,
+    APP_CHAIN.chainIdHex &&
+      APP_CHAIN.chainIdDecimal > 0 &&
+      APP_CHAIN.chainName &&
+      APP_CHAIN.rpcUrls.length > 0 &&
+      APP_CHAIN.nativeCurrency.symbol,
   );
 }
 
 export function explorerTxUrl(hash: string) {
   if (!hash) return "";
-  const baseUrl = CELO_CHAIN.blockExplorerUrls[0];
+  const baseUrl = APP_CHAIN.blockExplorerUrls[0];
   if (!baseUrl) return "";
   return `${baseUrl.replace(/\/+$/, "")}/tx/${hash}`;
 }

@@ -28,7 +28,7 @@ import {
   normalizeChainIdHex,
   normalizeProviderAccounts,
 } from "~/lib/web3/minipay";
-import { CELO_CHAIN, hasCeloChainConfig } from "~/lib/web3/celo";
+import { APP_CHAIN, hasAppChainConfig } from "~/lib/web3/chain";
 import { readRawErrorMessage, toUserFacingWalletError } from "~/lib/errors";
 
 type WalletContextValue = {
@@ -36,16 +36,16 @@ type WalletContextValue = {
   chainIdHex: string;
   isMiniPay: boolean;
   canDisconnect: boolean;
-  isCeloChain: boolean;
+  isAppChain: boolean;
   isConnecting: boolean;
   error: string;
   connectWallet: () => Promise<void>;
   disconnectWallet: () => Promise<void>;
-  switchToCelo: () => Promise<void>;
+  switchToAppChain: () => Promise<void>;
   clearWalletError: () => void;
-  hasCeloChainConfig: boolean;
-  celoChainIdHex: string;
-  celoChainName: string;
+  hasAppChainConfig: boolean;
+  appChainIdHex: string;
+  appChainName: string;
   backendApiUrl: string;
   hasBackendApiConfig: boolean;
   isBackendAuthenticated: boolean;
@@ -135,11 +135,11 @@ export function WalletProvider({ children }: WalletProviderProps) {
   const chainIdHex = toHexChainId(chainId) || miniPayChainIdHex;
   const account = address || miniPayAccount;
   const normalizedAccount = account.toLowerCase();
-  const hasCeloConfig = hasCeloChainConfig();
+  const hasBaseConfig = hasAppChainConfig();
   const hasBackendConfig = hasBackendApiConfig();
-  const isCeloChain =
-    hasCeloConfig &&
-    chainIdHex.toLowerCase() === (CELO_CHAIN.chainIdHex || "").toLowerCase();
+  const isAppChain =
+    hasBaseConfig &&
+    chainIdHex.toLowerCase() === (APP_CHAIN.chainIdHex || "").toLowerCase();
   const isConnected = Boolean(account);
   const isConnecting = isAppKitOpening || isSwitchPending || isMiniPayConnecting;
   const canDisconnect = !isMiniPay;
@@ -249,7 +249,7 @@ export function WalletProvider({ children }: WalletProviderProps) {
     }
   }
 
-  async function addCeloChainToWallet() {
+  async function addAppChainToWallet() {
     const provider = getEip1193Provider();
     if (!provider) {
       setError("EVM wallet not detected.");
@@ -260,17 +260,17 @@ export function WalletProvider({ children }: WalletProviderProps) {
       method: "wallet_addEthereumChain",
       params: [
         {
-          chainId: CELO_CHAIN.chainIdHex,
-          chainName: CELO_CHAIN.chainName,
-          nativeCurrency: CELO_CHAIN.nativeCurrency,
-          rpcUrls: CELO_CHAIN.rpcUrls,
-          blockExplorerUrls: CELO_CHAIN.blockExplorerUrls,
+          chainId: APP_CHAIN.chainIdHex,
+          chainName: APP_CHAIN.chainName,
+          nativeCurrency: APP_CHAIN.nativeCurrency,
+          rpcUrls: APP_CHAIN.rpcUrls,
+          blockExplorerUrls: APP_CHAIN.blockExplorerUrls,
         },
       ],
     });
   }
 
-  async function switchToCelo() {
+  async function switchToAppChain() {
     if (!isConnected) {
       setError("Connect wallet first before switching chain.");
       return;
@@ -278,14 +278,14 @@ export function WalletProvider({ children }: WalletProviderProps) {
 
     if (isMiniPay) {
       setError(
-        `MiniPay cannot be switched from the dApp. Open this app from MiniPay on ${CELO_CHAIN.chainName}.`,
+        `MiniPay cannot be switched from the dApp. Open this app from MiniPay on ${APP_CHAIN.chainName}.`,
       );
       return;
     }
 
-    if (!hasCeloConfig) {
+    if (!hasBaseConfig) {
       setError(
-        "Celo config is incomplete. Fill the variables in frontend/.env.local.",
+        "Base config is incomplete. Fill the variables in frontend/.env.local.",
       );
       return;
     }
@@ -293,7 +293,7 @@ export function WalletProvider({ children }: WalletProviderProps) {
     setError("");
 
     try {
-      await switchChainAsync({ chainId: CELO_CHAIN.chainIdDecimal });
+      await switchChainAsync({ chainId: APP_CHAIN.chainIdDecimal });
       return;
     } catch (switchError) {
       const switchCode = readSwitchErrorCode(switchError);
@@ -305,7 +305,7 @@ export function WalletProvider({ children }: WalletProviderProps) {
 
       if (!shouldTryAddChain) {
         setError(
-          toUserFacingWalletError(switchError, "Failed to switch to Celo chain.", {
+          toUserFacingWalletError(switchError, "Failed to switch to Base chain.", {
             userRejectedMessage: "Chain switch was canceled in wallet.",
           }),
         );
@@ -314,13 +314,13 @@ export function WalletProvider({ children }: WalletProviderProps) {
     }
 
     try {
-      await addCeloChainToWallet();
-      await switchChainAsync({ chainId: CELO_CHAIN.chainIdDecimal });
+      await addAppChainToWallet();
+      await switchChainAsync({ chainId: APP_CHAIN.chainIdDecimal });
     } catch (addChainError) {
       setError(
         toUserFacingWalletError(
           addChainError,
-          "Failed to add Celo chain.",
+          "Failed to add Base chain.",
           {
             userRejectedMessage: "Adding chain was canceled in wallet.",
           },
@@ -414,9 +414,9 @@ export function WalletProvider({ children }: WalletProviderProps) {
       return false;
     }
     if (isMiniPay) {
-      if (!isCeloChain) {
+      if (!isAppChain) {
         setBackendAuthError(
-          `MiniPay must be on ${CELO_CHAIN.chainName} before game data can sync.`,
+          `MiniPay must be on ${APP_CHAIN.chainName} before game data can sync.`,
         );
         return false;
       }
@@ -427,7 +427,7 @@ export function WalletProvider({ children }: WalletProviderProps) {
       try {
         await backendPost<{ success: boolean; address: string }>("/auth/minipay", {
           address: account,
-          chainId: chainId || CELO_CHAIN.chainIdDecimal || 42220,
+          chainId: chainId || APP_CHAIN.chainIdDecimal || 42220,
           walletProvider: "minipay",
         });
 
@@ -467,7 +467,7 @@ export function WalletProvider({ children }: WalletProviderProps) {
       const { nonce } = await backendFetch<{ nonce: string }>("/auth/nonce");
       const domain = window.location.host;
       const origin = window.location.origin;
-      const chainIdToUse = chainId || CELO_CHAIN.chainIdDecimal || 42220;
+      const chainIdToUse = chainId || APP_CHAIN.chainIdDecimal || 42220;
       const statement = "Sign in to Pass Chick backend.";
       const siweMessage = new SiweMessage({
         domain,
@@ -614,16 +614,16 @@ export function WalletProvider({ children }: WalletProviderProps) {
     chainIdHex,
     isMiniPay,
     canDisconnect,
-    isCeloChain,
+    isAppChain,
     isConnecting,
     error,
     connectWallet,
     disconnectWallet,
-    switchToCelo,
+    switchToAppChain,
     clearWalletError: () => setError(""),
-    hasCeloChainConfig: hasCeloConfig,
-    celoChainIdHex: CELO_CHAIN.chainIdHex,
-    celoChainName: CELO_CHAIN.chainName,
+    hasAppChainConfig: hasBaseConfig,
+    appChainIdHex: APP_CHAIN.chainIdHex,
+    appChainName: APP_CHAIN.chainName,
     backendApiUrl: BACKEND_API_URL,
     hasBackendApiConfig: hasBackendConfig,
     isBackendAuthenticated,

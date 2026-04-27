@@ -4,7 +4,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useWallet } from "~/components/web3/WalletProvider";
-import { CELO_CHAIN } from "~/lib/web3/celo";
+import { APP_CHAIN } from "~/lib/web3/chain";
 import { MINIPAY_UNSUPPORTED_CHAIN_MESSAGE } from "~/lib/web3/minipay";
 
 function shortAddress(address: string, isMobile: boolean = false) {
@@ -52,10 +52,10 @@ export function PlayTopNav() {
     canDisconnect,
     isMiniPay,
     isConnecting,
-    isCeloChain,
+    isAppChain,
     connectWallet,
     disconnectWallet,
-    switchToCelo,
+    switchToAppChain,
     error,
     isBackendAuthenticated,
     isBackendAuthLoading,
@@ -300,8 +300,8 @@ export function PlayTopNav() {
       return;
     }
 
-    if (!isCeloChain) {
-      await switchToCelo();
+    if (!isAppChain) {
+      await switchToAppChain();
       return;
     }
 
@@ -357,7 +357,7 @@ export function PlayTopNav() {
     async function syncPlayBlocker() {
       if (
         !isConnected ||
-        !isCeloChain ||
+        !isAppChain ||
         (hasBackendApiConfig && !isBackendAuthenticated)
       ) {
         if (!cancelled) {
@@ -396,7 +396,7 @@ export function PlayTopNav() {
     hasBackendApiConfig,
     isBackendAuthenticated,
     isConnected,
-    isCeloChain,
+    isAppChain,
   ]);
 
   useEffect(() => {
@@ -600,16 +600,16 @@ export function PlayTopNav() {
     statusTone = "warning";
     statusMessage = "CONNECT WALLET TO PLAY";
     statusActionLabel = "CONNECT";
-  } else if (isMiniPay && !isCeloChain) {
+  } else if (isMiniPay && !isAppChain) {
     statusTone = "warning";
     statusMessage = MINIPAY_UNSUPPORTED_CHAIN_MESSAGE;
   } else if (error) {
     statusTone = "error";
     statusMessage = error;
-    statusActionLabel = !isCeloChain ? "SWITCH" : "";
-  } else if (!isCeloChain) {
+    statusActionLabel = !isAppChain ? "SWITCH" : "";
+  } else if (!isAppChain) {
     statusTone = "warning";
-    statusMessage = `SWITCH TO ${String(CELO_CHAIN.chainName || "CELO").toUpperCase()}`;
+    statusMessage = `SWITCH TO ${String(APP_CHAIN.chainName || "BASE").toUpperCase()}`;
     statusActionLabel = "SWITCH";
   } else if (hasBackendApiConfig && isBackendAuthLoading) {
     statusTone = "busy";
@@ -643,7 +643,7 @@ export function PlayTopNav() {
     (Boolean(statusActionLabel) ||
       playBlocker.kind !== "none" ||
       !isConnected ||
-      !isCeloChain ||
+      !isAppChain ||
       (hasBackendApiConfig && !isBackendAuthenticated));
   const hasAlertBadge =
     statusTone === "warning" ||
@@ -930,9 +930,9 @@ export function PlayTopNav() {
             <h3 className="play-passport-title">PASSPORT CLAIMED</h3>
             <div className="play-passport-card">
               <img
-                className="play-passport-celo-logo"
-                src="/images/logo-celo.png"
-                alt="Celo logo"
+                className="play-passport-base-logo"
+                src="/images/logo-base.png"
+                alt="Base logo"
                 loading="lazy"
                 draggable={false}
               />

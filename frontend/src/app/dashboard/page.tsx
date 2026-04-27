@@ -37,13 +37,13 @@ export default function DashboardPage() {
     account,
     canDisconnect,
     isMiniPay,
-    isCeloChain,
+    isAppChain,
     isConnecting,
     connectWallet,
     disconnectWallet,
   } = useWallet();
   const isConnected = Boolean(account);
-  const showMiniPayCallout = isMiniPay && !isCeloChain;
+  const showMiniPayCallout = isMiniPay && !isAppChain;
   const showConnectedDashboardUi = isConnected && !isLoggingOut;
   const ownerAddress = isAddress(account) ? (account as Address) : undefined;
   const usdcAddress = isAddress(USDC_ADDRESS)
@@ -126,7 +126,7 @@ export default function DashboardPage() {
           <Link className="home-brand" href="/">
             <span className="home-brand-badge">GM</span>
             <span className="home-brand-copy">
-              <p className="home-brand-eyebrow">Celo Arcade Risk Game</p>
+              <p className="home-brand-eyebrow">Base Arcade Risk Game</p>
               <span className="home-brand-name">Pass Chick</span>
             </span>
           </Link>
@@ -169,16 +169,16 @@ export default function DashboardPage() {
                           <span className="home-profile-label">Chain</span>
                           <span
                             className={`mono home-profile-value ${
-                              isMiniPay || isCeloChain
+                              isMiniPay || isAppChain
                                 ? "home-profile-value-ready"
                                 : "home-profile-value-warning"
                             }`}
                           >
                             {isMiniPay
-                              ? "MINIPAY / CELO"
-                              : isCeloChain
-                                ? "CELO READY"
-                                : "SWITCH TO CELO"}
+                              ? "MINIPAY / BASE"
+                              : isAppChain
+                                ? "BASE READY"
+                                : "SWITCH TO BASE"}
                           </span>
                         </div>
                       </div>
@@ -236,7 +236,7 @@ export default function DashboardPage() {
           ) : null}
           <div className="dashboard-title" aria-label="Pass Chick">
             <span className="dashboard-title-line">CHICKEN</span>
-            <span className="dashboard-title-line">CELO</span>
+            <span className="dashboard-title-line">BASE</span>
           </div>
           <div className="dashboard-actions">
             {showConnectedDashboardUi ? (

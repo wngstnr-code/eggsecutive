@@ -34,7 +34,7 @@ import {
   hasGameContractConfig,
   hasPassportContractConfig,
 } from "~/lib/web3/contracts";
-import { CELO_CHAIN } from "~/lib/web3/celo";
+import { APP_CHAIN } from "~/lib/web3/chain";
 
 type GameBridgeClientProps = {
   backgroundMode?: boolean;
@@ -368,7 +368,7 @@ export function GameBridgeClient({
   const {
     account,
     isMiniPay,
-    isCeloChain,
+    isAppChain,
     isBackendAuthenticated,
     hasBackendApiConfig: hasBackendConfig,
     ensureBackendSession,
@@ -505,7 +505,7 @@ export function GameBridgeClient({
       const socketAuth = {
         walletAddress: account || "",
         walletProvider: isMiniPay ? "minipay" : "wallet",
-        chainId: CELO_CHAIN.chainIdDecimal,
+        chainId: APP_CHAIN.chainIdDecimal,
       };
 
       if (socketRef.current) {
@@ -753,8 +753,8 @@ export function GameBridgeClient({
       if (!account || !isAddress(account)) {
         throw new Error("Connect wallet first before playing.");
       }
-      if (!isCeloChain) {
-        throw new Error(`Switch wallet to ${CELO_CHAIN.chainName} first before playing.`);
+      if (!isAppChain) {
+        throw new Error(`Switch wallet to ${APP_CHAIN.chainName} first before playing.`);
       }
       if (!hasGameContractConfig()) {
         throw new Error("Frontend contract config is incomplete.");
@@ -1056,7 +1056,7 @@ export function GameBridgeClient({
       if (
         !account ||
         !isAddress(account) ||
-        !isCeloChain ||
+        !isAppChain ||
         !hasGameContractConfig() ||
         !hasBackendConfig
       ) {
@@ -1605,7 +1605,7 @@ export function GameBridgeClient({
         }
 
         const backendDomainChainId = Number(issued?.signingDomain?.chainId || 0);
-        const appChainId = Number(CELO_CHAIN.chainIdDecimal || 0);
+        const appChainId = Number(APP_CHAIN.chainIdDecimal || 0);
         if (
           backendDomainChainId > 0 &&
           appChainId > 0 &&
@@ -2048,7 +2048,7 @@ export function GameBridgeClient({
     ensureBackendSession,
     isBackendAuthenticated,
     hasBackendConfig,
-    isCeloChain,
+    isAppChain,
     refreshBackendSession,
   ]);
 

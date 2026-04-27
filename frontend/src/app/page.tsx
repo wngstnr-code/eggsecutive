@@ -85,8 +85,8 @@ const ABOUT_FEATURES = [
     imageAlt: "Pass Chick checkpoint cash out preview",
   },
   {
-    title: "CELO WALLET FLOW",
-    copy: "From wallet deposit to live play, the Celo flow stays quick and simple.",
+    title: "BASE WALLET FLOW",
+    copy: "From wallet deposit to live play, the Base flow stays quick and simple.",
     tone: "wallet",
     imageSrc: "/images/about-stakes.png",
     imageAlt: "Pass Chick wallet flow preview",
@@ -170,7 +170,7 @@ export default function Home() {
     account,
     canDisconnect,
     isMiniPay,
-    isCeloChain,
+    isAppChain,
     isConnecting,
     error,
     connectWallet,
@@ -190,7 +190,7 @@ export default function Home() {
   const profileWrapRef = useRef<HTMLDivElement | null>(null);
 
   const isConnected = Boolean(account);
-  const showMiniPayCallout = isMiniPay && !isCeloChain;
+  const showMiniPayCallout = isMiniPay && !isAppChain;
   const ownerAddress = isAddress(account) ? (account as Address) : undefined;
   const usdcAddress = isAddress(USDC_ADDRESS)
     ? (USDC_ADDRESS as Address)
@@ -421,7 +421,7 @@ export default function Home() {
         <div className="home-brand">
           <div className="home-brand-badge">GM</div>
           <div className="home-brand-copy">
-            <p className="home-brand-eyebrow">Celo Arcade Risk Game</p>
+            <p className="home-brand-eyebrow">Base Arcade Risk Game</p>
             <div className="home-brand-name">Pass Chick</div>
           </div>
         </div>
@@ -461,15 +461,15 @@ export default function Home() {
                         <span className="home-profile-label">Chain</span>
                         <span
                           className={`mono home-profile-value ${
-                            isMiniPay || isCeloChain
+                            isMiniPay || isAppChain
                               ? "home-profile-value-ready"
                               : "home-profile-value-warning"
                           }`}>
                           {isMiniPay
-                            ? "MINIPAY / CELO"
-                            : isCeloChain
-                              ? "CELO READY"
-                              : "SWITCH TO CELO"}
+                            ? "MINIPAY / BASE"
+                            : isAppChain
+                              ? "BASE READY"
+                              : "SWITCH TO BASE"}
                         </span>
                       </div>
                     </div>
@@ -736,7 +736,7 @@ export default function Home() {
               </p>
             </div>
             <p>
-              Live contracts: USDC + Vault + Settlement + Passport on Celo.
+              Live contracts: USDC + Vault + Settlement + Passport on Base.
             </p>
           </div>
         </div>
@@ -773,7 +773,7 @@ export default function Home() {
           <div>
             <p className="home-preview-title">PASS CHICK</p>
             <h3 className="home-footer-title">
-              Fast arcade risk with fixed-stake runs on Celo.
+              Fast arcade risk with fixed-stake runs on Base.
             </h3>
           </div>
 

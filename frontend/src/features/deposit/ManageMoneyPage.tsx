@@ -30,7 +30,7 @@ function shortHash(hash: string) {
 function readWalletStatus(flow: DepositFlowViewModel) {
   if (!flow.isConnected) return "Not Connected";
   if (flow.isMiniPay) return "MiniPay";
-  if (!flow.isCeloChain) return "Wrong Network";
+  if (!flow.isAppChain) return "Wrong Network";
   return "Connected";
 }
 

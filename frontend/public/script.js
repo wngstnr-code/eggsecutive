@@ -1316,7 +1316,7 @@ function DirectionalLight() {
   return dirLight;
 }
 
-function createCeloCheckpointBannerTexture(cpNumber) {
+function createBaseCheckpointBannerTexture(cpNumber) {
   const canvas = document.createElement("canvas");
   canvas.width = 512;
   canvas.height = 128;
@@ -1363,7 +1363,7 @@ function createCeloCheckpointBannerTexture(cpNumber) {
   return texture;
 }
 
-function createCeloGroundTexture() {
+function createBaseGroundTexture() {
   const canvas = document.createElement("canvas");
   canvas.width = 1024;
   canvas.height = 256;
@@ -1379,10 +1379,10 @@ function createCeloGroundTexture() {
 
   ctx.strokeStyle = "rgba(120,90,16,0.95)";
   ctx.lineWidth = 16;
-  ctx.strokeText("CELO", canvas.width / 2, canvas.height / 2 + 6);
+  ctx.strokeText("BASE", canvas.width / 2, canvas.height / 2 + 6);
 
   ctx.fillStyle = "rgba(244, 218, 96, 0.96)";
-  ctx.fillText("CELO", canvas.width / 2, canvas.height / 2 + 6);
+  ctx.fillText("BASE", canvas.width / 2, canvas.height / 2 + 6);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.needsUpdate = true;
@@ -1421,7 +1421,7 @@ function Grass(rowIndex, isCheckpoint) {
       flatShading: true,
     });
     const bannerMat = new THREE.MeshLambertMaterial({
-      map: createCeloCheckpointBannerTexture(cpNumber),
+      map: createBaseCheckpointBannerTexture(cpNumber),
     });
 
     const postL = new THREE.Mesh(new THREE.BoxGeometry(3, 3, 40), postMat);
@@ -1451,18 +1451,18 @@ function Grass(rowIndex, isCheckpoint) {
       grass.add(laneGlow);
     });
 
-    const celoGroundLabel = new THREE.Mesh(
+    const baseGroundLabel = new THREE.Mesh(
       new THREE.PlaneGeometry(tilesPerRow * tileSize * 0.62, tileSize * 0.7),
       new THREE.MeshBasicMaterial({
-        map: createCeloGroundTexture(),
+        map: createBaseGroundTexture(),
         transparent: true,
         depthWrite: false,
       }),
     );
-    celoGroundLabel.position.set(0, 0, 1.7);
-    grass.add(celoGroundLabel);
+    baseGroundLabel.position.set(0, 0, 1.7);
+    grass.add(baseGroundLabel);
 
-    // Celo-themed flags at edges
+    // Base-themed flags at edges
     [-1, 1].forEach((side) => {
       const flag = new THREE.Mesh(
         new THREE.BoxGeometry(2, 2, 18),

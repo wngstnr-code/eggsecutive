@@ -6,7 +6,7 @@ import { BACKEND_API_URL, hasBackendApiConfig } from "~/lib/backend/config";
 import type { DepositFlowViewModel } from "./types";
 
 export function useBackendDepositFlow(): DepositFlowViewModel {
-  const { account, isMiniPay, isCeloChain } = useWallet();
+  const { account, isMiniPay, isAppChain } = useWallet();
   const [amount, setAmount] = useState("0.0001");
 
   const isConnected = Boolean(account);
@@ -26,7 +26,7 @@ export function useBackendDepositFlow(): DepositFlowViewModel {
     errorMessage: "",
     isConnected,
     isMiniPay,
-    isCeloChain,
+    isAppChain,
     canTransact: false,
     hasValidContracts: hasBackendConfig,
     usdcAddress: "",
