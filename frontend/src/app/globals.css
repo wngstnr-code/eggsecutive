@@ -1134,8 +1134,9 @@ canvas.game {
 
 .score-card-main {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) auto auto auto minmax(0, 1fr);
   align-items: center;
+  justify-items: center;
   gap: 10px;
   width: 100%;
 }
@@ -1156,9 +1157,17 @@ canvas.game {
 }
 
 .score-separator {
+  width: 32px;
+  height: 0;
+  opacity: 0;
+  margin: 0;
+}
+
+.hud-divider {
   width: 1px;
-  height: 32px;
-  background: rgba(184, 212, 255, 0.45);
+  height: 28px;
+  background: linear-gradient(to bottom, transparent, rgba(80, 227, 194, 0.45), transparent);
+  box-shadow: 0 0 4px rgba(80, 227, 194, 0.25);
 }
 
 .score-card .stat-value {
@@ -6403,7 +6412,7 @@ canvas.game {
 
   .score-metric {
     transform: scale(1.2);
-    transform-origin: left center;
+    transform-origin: center center;
   }
 
   #score {
@@ -6631,6 +6640,11 @@ canvas.game {
 }
 
 .play-bottom-navbar {
+  display: none;
+}
+
+/* Mobile-only floating bottom navbar — desktop uses the side stack instead. */
+.play-bottom-navbar-v2 {
   display: none;
 }
 
@@ -7009,7 +7023,7 @@ canvas.game {
   .score-separator {
     grid-column: 3;
     width: 80px;
-    height: 100%;
+    height: 0;
     opacity: 0;
     margin: 0;
   }
@@ -7022,13 +7036,6 @@ canvas.game {
 
   .timer-flash {
     animation: timer-pulse 0.5s infinite;
-  }
-
-  .score-separator {
-    width: 80px;
-    height: 0;
-    opacity: 0;
-    margin: 0;
   }
 
   #bet-hud {

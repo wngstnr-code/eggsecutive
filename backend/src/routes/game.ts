@@ -76,18 +76,69 @@ function toSettlementErrorMessage(error: unknown) {
   return `Failed to submit settlement onchain: ${raw}`;
 }
 
-function isAlreadySettledLikeError(error: unknown) {
-  const raw = String(
-    (error as { shortMessage?: string; message?: string })?.shortMessage ||
-      (error as { message?: string })?.message ||
-      "",
-  ).toLowerCase();
+// Custom error selectors from GameSettlement.sol that mean "session is no longer
+// settleable on-chain" — i.e. the settlement should be treated as already final.
+const ALREADY_SETTLED_LIKE_SELECTORS = new Set([
+  "0xfa9b370d", // SessionNotFound(bytes32)
+  "0x2f2c01cb", // SessionAlreadySettled(bytes32)
+  "0x15e292d2", // SessionNotActive(bytes32)
+]);
 
-  return (
-    raw.includes("sessionalreadysettled") ||
-    raw.includes("sessionnotactive") ||
-    raw.includes("sessionnotfound")
-  );
+function collectErrorTexts(error: unknown): string[] {
+  const out: string[] = [];
+  const seen = new Set<object>();
+  const queue: unknown[] = [error];
+
+  while (queue.length > 0) {
+    const cur = queue.shift();
+    if (cur == null) continue;
+    if (typeof cur === "string") {
+      out.push(cur);
+      continue;
+    }
+    if (typeof cur !== "object") continue;
+    if (seen.has(cur as object)) continue;
+    seen.add(cur as object);
+
+    const rec = cur as Record<string, unknown>;
+    for (const value of Object.values(rec)) {
+      if (typeof value === "string") {
+        out.push(value);
+      } else if (Array.isArray(value)) {
+        for (const item of value) queue.push(item);
+      } else if (value && typeof value === "object") {
+        queue.push(value);
+      }
+    }
+  }
+
+  return out;
+}
+
+function isAlreadySettledLikeError(error: unknown) {
+  const texts = collectErrorTexts(error);
+
+  for (const text of texts) {
+    const lower = text.toLowerCase();
+    if (
+      lower.includes("sessionalreadysettled") ||
+      lower.includes("sessionnotactive") ||
+      lower.includes("sessionnotfound")
+    ) {
+      return true;
+    }
+
+    const selectorMatch = text.match(/0x[a-fA-F0-9]{8}/g);
+    if (selectorMatch) {
+      for (const candidate of selectorMatch) {
+        if (ALREADY_SETTLED_LIKE_SELECTORS.has(candidate.toLowerCase())) {
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
 }
 
 function parsePaginationParam(value: unknown, fallback: number, min: number, max: number) {

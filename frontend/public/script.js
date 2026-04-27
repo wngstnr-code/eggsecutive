@@ -1412,6 +1412,65 @@ function createBaseGroundTexture() {
   return texture;
 }
 
+const __rockMatA = new THREE.MeshLambertMaterial({
+  color: 0x6a6358,
+  flatShading: true,
+});
+const __rockMatB = new THREE.MeshLambertMaterial({
+  color: 0x4f4a42,
+  flatShading: true,
+});
+const __rockMatC = new THREE.MeshLambertMaterial({
+  color: 0x3b362f,
+  flatShading: true,
+});
+
+// Layers cover from playable edge (tile 9) all the way to side mesh edge (tile 17).
+// tilePos is the rock's center in tile units measured from the row center.
+const __nonTunnelRockLayers = [
+  { tilePos: 9.5, sx: 1.0, sy: 1.0, h: 78, mat: __rockMatA, yOff: 0 },
+  { tilePos: 11.0, sx: 2.0, sy: 1.05, h: 116, mat: __rockMatB, yOff: 7 },
+  { tilePos: 13.0, sx: 2.0, sy: 1.0, h: 138, mat: __rockMatC, yOff: -5 },
+  { tilePos: 15.0, sx: 2.0, sy: 1.05, h: 102, mat: __rockMatA, yOff: 4 },
+  { tilePos: 16.5, sx: 1.0, sy: 1.0, h: 86, mat: __rockMatB, yOff: 0 },
+];
+
+// Tunnel rows leave tile 9..10 free for the tunnel mouth and keep coverage 10..17.
+const __tunnelRockLayers = [
+  { tilePos: 10.5, sx: 1.0, sy: 1.05, h: 96, mat: __rockMatA, yOff: 5 },
+  { tilePos: 12.0, sx: 2.0, sy: 1.0, h: 130, mat: __rockMatC, yOff: -3 },
+  { tilePos: 14.0, sx: 2.0, sy: 1.05, h: 112, mat: __rockMatB, yOff: 6 },
+  { tilePos: 16.0, sx: 2.0, sy: 1.0, h: 92, mat: __rockMatA, yOff: 0 },
+];
+
+function MapEdgeRocks(opts = {}) {
+  const layers = opts.tunnelGap ? __tunnelRockLayers : __nonTunnelRockLayers;
+  const group = new THREE.Group();
+
+  [-1, 1].forEach((side) => {
+    layers.forEach((layer) => {
+      const rock = new THREE.Mesh(
+        new THREE.BoxGeometry(
+          layer.sx * tileSize,
+          layer.sy * tileSize,
+          layer.h,
+        ),
+        layer.mat,
+      );
+      rock.position.set(
+        side * layer.tilePos * tileSize,
+        layer.yOff,
+        layer.h / 2,
+      );
+      rock.castShadow = true;
+      rock.receiveShadow = true;
+      group.add(rock);
+    });
+  });
+
+  return group;
+}
+
 function Grass(rowIndex, isCheckpoint) {
   const grass = new THREE.Group();
   grass.position.y = rowIndex * tileSize;
@@ -1551,6 +1610,8 @@ function Grass(rowIndex, isCheckpoint) {
     grass.add(bush);
   }
 
+  grass.add(MapEdgeRocks());
+
   return grass;
 }
 
@@ -1562,6 +1623,7 @@ function initializeMap() {
   // Remove all rows
   metadata.length = 0;
   map.remove(...map.children);
+  railwayLights.length = 0;
   pendingRoadRowsInSegment = 0;
   consecutiveRoadRows = 0;
 
@@ -1620,6 +1682,41 @@ function addRows() {
         );
         vehicle.ref = truck;
         row.add(truck);
+      });
+
+      map.add(row);
+    }
+
+    if (rowData.type === "river") {
+      const row = River(rowIndex);
+
+      if (rowData.boats) {
+        rowData.boats.forEach((boat) => {
+          const boatMesh = Boat(
+            boat.initialTileIndex,
+            rowData.direction,
+            boat.color,
+          );
+          boat.ref = boatMesh;
+          row.add(boatMesh);
+        });
+      }
+
+      map.add(row);
+    }
+
+    if (rowData.type === "train") {
+      const row = Rail(rowIndex);
+
+      rowData.vehicles.forEach((vehicle) => {
+        const carMesh = Train(
+          vehicle.initialTileIndex,
+          rowData.direction,
+          vehicle.isLocomotive,
+          vehicle.color,
+        );
+        vehicle.ref = carMesh;
+        row.add(carMesh);
       });
 
       map.add(row);
@@ -1734,22 +1831,75 @@ function Player() {
 const position = {
   currentRow: 0,
   currentTile: 0,
+  ridingBoat: null,
 };
 
 const movesQueue = [];
+let moveStartX = 0;
+let moveStartY = 0;
+
+const PLAYER_BOAT_RIDE_Z = 11;
+const BOAT_HALF_WIDTH = 50;
 
 function initializePlayer() {
   // Initialize the Three.js player object
   player.position.x = 0;
   player.position.y = 0;
+  player.position.z = 0;
   player.children[0].position.z = 0;
 
   // Initialize metadata
   position.currentRow = 0;
   position.currentTile = 0;
+  position.ridingBoat = null;
 
   // Clear the moves queue
   movesQueue.length = 0;
+  moveStartX = 0;
+  moveStartY = 0;
+}
+
+function findBoatAtTile(rowData, tileIndex) {
+  if (!rowData || !rowData.boats) return null;
+  const targetX = tileIndex * tileSize;
+  for (const boat of rowData.boats) {
+    if (!boat.ref) continue;
+    if (Math.abs(boat.ref.position.x - targetX) <= BOAT_HALF_WIDTH) {
+      return boat.ref;
+    }
+  }
+  return null;
+}
+
+function onDrown() {
+  if (gameOver || settlementPending) return;
+  movesQueue.length = 0;
+  position.ridingBoat = null;
+  player.position.z = 0;
+  if (typeof playCrashSfx === "function") playCrashSfx();
+  if (bet.active) {
+    void crashBet("drowned");
+  } else {
+    showResult({ type: "gameover" });
+  }
+}
+
+function evaluateBoatRide() {
+  const newRow = metadata[position.currentRow - 1];
+  if (newRow && newRow.type === "river") {
+    const boatRef = findBoatAtTile(newRow, position.currentTile);
+    if (boatRef) {
+      position.ridingBoat = boatRef;
+      player.position.z = PLAYER_BOAT_RIDE_Z;
+      return;
+    }
+    position.ridingBoat = null;
+    player.position.z = 0;
+    onDrown();
+    return;
+  }
+  position.ridingBoat = null;
+  player.position.z = 0;
 }
 
 function isInputBlocked() {
@@ -1828,6 +1978,8 @@ function stepCompleted() {
     const colorIndex = Math.floor(position.currentRow / 20) % colors.length;
     scoreDOM.style.color = colors[colorIndex];
   }
+
+  evaluateBoatRide();
 }
 
 function Renderer() {
@@ -1844,6 +1996,78 @@ function Renderer() {
   renderer.shadowMap.enabled = true;
 
   return renderer;
+}
+
+function RoadTunnelPortal(direction) {
+  const portal = new THREE.Group();
+
+  const stoneMat = new THREE.MeshLambertMaterial({
+    color: 0x4d525c,
+    flatShading: true,
+  });
+  const stoneDarkMat = new THREE.MeshLambertMaterial({
+    color: 0x2a2d35,
+    flatShading: true,
+  });
+  const trimMat = new THREE.MeshLambertMaterial({
+    color: 0x7a8294,
+    flatShading: true,
+  });
+
+  const portalDepth = 22;
+  const portalWidth = tileSize + 12;
+  const wallHeight = 38;
+
+  const backWall = new THREE.Mesh(
+    new THREE.BoxGeometry(portalDepth, portalWidth, wallHeight),
+    stoneDarkMat,
+  );
+  backWall.position.set(direction * (portalDepth / 2 + 4), 0, wallHeight / 2);
+  backWall.castShadow = true;
+  backWall.receiveShadow = true;
+  portal.add(backWall);
+
+  const lintel = new THREE.Mesh(
+    new THREE.BoxGeometry(portalDepth + 10, portalWidth, 8),
+    stoneMat,
+  );
+  lintel.position.set(direction * (portalDepth / 2 - 1), 0, wallHeight + 4);
+  lintel.castShadow = true;
+  portal.add(lintel);
+
+  const lintelTrim = new THREE.Mesh(
+    new THREE.BoxGeometry(portalDepth + 12, portalWidth - 10, 2),
+    trimMat,
+  );
+  lintelTrim.position.set(direction * (portalDepth / 2 - 1), 0, wallHeight + 9);
+  portal.add(lintelTrim);
+
+  [-1, 1].forEach((sideY) => {
+    const pillar = new THREE.Mesh(
+      new THREE.BoxGeometry(10, 6, wallHeight + 4),
+      stoneMat,
+    );
+    pillar.position.set(
+      direction * 5,
+      sideY * (tileSize / 2 + 1.5),
+      (wallHeight + 4) / 2,
+    );
+    pillar.castShadow = true;
+    portal.add(pillar);
+
+    const pillarBase = new THREE.Mesh(
+      new THREE.BoxGeometry(14, 8, 4),
+      trimMat,
+    );
+    pillarBase.position.set(
+      direction * 5,
+      sideY * (tileSize / 2 + 1.5),
+      2,
+    );
+    portal.add(pillarBase);
+  });
+
+  return portal;
 }
 
 function Road(rowIndex) {
@@ -1886,7 +2110,443 @@ function Road(rowIndex) {
   curbBack.position.set(0, -tileSize / 2 + 0.5, 1);
   road.add(curbBack);
 
+  const tunnelL = RoadTunnelPortal(-1);
+  tunnelL.position.x = -(tilesPerRow / 2 + 0.5) * tileSize;
+  road.add(tunnelL);
+
+  const tunnelR = RoadTunnelPortal(1);
+  tunnelR.position.x = (tilesPerRow / 2 + 0.5) * tileSize;
+  road.add(tunnelR);
+
+  road.add(MapEdgeRocks({ tunnelGap: true }));
+
   return road;
+}
+
+function River(rowIndex) {
+  const river = new THREE.Group();
+  river.position.y = rowIndex * tileSize;
+
+  const waterMat = new THREE.MeshLambertMaterial({ color: 0x3aa3d6 });
+  const sideMat = new THREE.MeshLambertMaterial({ color: 0x276f9f });
+
+  const middle = new THREE.Mesh(
+    new THREE.BoxGeometry(tilesPerRow * tileSize, tileSize, 3),
+    waterMat,
+  );
+  middle.receiveShadow = true;
+  river.add(middle);
+
+  const left = new THREE.Mesh(
+    new THREE.BoxGeometry(tilesPerRow * tileSize, tileSize, 3),
+    sideMat,
+  );
+  left.position.x = -tilesPerRow * tileSize;
+  river.add(left);
+
+  const right = new THREE.Mesh(
+    new THREE.BoxGeometry(tilesPerRow * tileSize, tileSize, 3),
+    sideMat,
+  );
+  right.position.x = tilesPerRow * tileSize;
+  river.add(right);
+
+  const sparkleMat = new THREE.MeshBasicMaterial({
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0.55,
+  });
+  for (let i = 0; i < 8; i++) {
+    const sparkle = new THREE.Mesh(
+      new THREE.BoxGeometry(5, 1.2, 0.5),
+      sparkleMat,
+    );
+    sparkle.position.set(
+      (Math.random() - 0.5) * tilesPerRow * tileSize * 0.95,
+      (Math.random() - 0.5) * tileSize * 0.7,
+      1.8,
+    );
+    river.add(sparkle);
+  }
+
+  const bankMat = new THREE.MeshLambertMaterial({
+    color: 0x8a6f4a,
+    flatShading: true,
+  });
+  const bankFront = new THREE.Mesh(
+    new THREE.BoxGeometry(tilesPerRow * tileSize, 3, 6),
+    bankMat,
+  );
+  bankFront.position.set(0, tileSize / 2 - 1.5, 3);
+  bankFront.receiveShadow = true;
+  river.add(bankFront);
+
+  const bankBack = new THREE.Mesh(
+    new THREE.BoxGeometry(tilesPerRow * tileSize, 3, 6),
+    bankMat,
+  );
+  bankBack.position.set(0, -tileSize / 2 + 1.5, 3);
+  bankBack.receiveShadow = true;
+  river.add(bankBack);
+
+  river.add(MapEdgeRocks());
+
+  return river;
+}
+
+function Boat(initialTileIndex, direction, color) {
+  const boat = new THREE.Group();
+  boat.position.x = initialTileIndex * tileSize;
+  if (!direction) boat.rotation.z = Math.PI;
+
+  const woodMat = new THREE.MeshLambertMaterial({
+    color: 0x6b4226,
+    flatShading: true,
+  });
+  const woodLightMat = new THREE.MeshLambertMaterial({
+    color: 0x8b5a2b,
+    flatShading: true,
+  });
+  const accentMat = new THREE.MeshLambertMaterial({
+    color,
+    flatShading: true,
+  });
+  const cabinMat = new THREE.MeshLambertMaterial({
+    color: 0xefe2c4,
+    flatShading: true,
+  });
+
+  const hull = new THREE.Mesh(new THREE.BoxGeometry(100, 28, 9), woodMat);
+  hull.position.z = 5;
+  hull.castShadow = true;
+  hull.receiveShadow = true;
+  boat.add(hull);
+
+  const deck = new THREE.Mesh(new THREE.BoxGeometry(96, 28, 1.5), woodLightMat);
+  deck.position.z = 10.2;
+  deck.receiveShadow = true;
+  boat.add(deck);
+
+  const stripe = new THREE.Mesh(new THREE.BoxGeometry(102, 30, 2), accentMat);
+  stripe.position.z = 8.5;
+  boat.add(stripe);
+
+  const bow = new THREE.Mesh(new THREE.BoxGeometry(16, 18, 6), woodMat);
+  bow.position.set(50, 0, 6.5);
+  boat.add(bow);
+
+  const stern = new THREE.Mesh(new THREE.BoxGeometry(8, 22, 7), woodMat);
+  stern.position.set(-50, 0, 6.5);
+  boat.add(stern);
+
+  const cabin = new THREE.Mesh(new THREE.BoxGeometry(26, 18, 10), cabinMat);
+  cabin.position.set(-22, 0, 16);
+  cabin.castShadow = true;
+  boat.add(cabin);
+
+  const cabinWindow = new THREE.Mesh(
+    new THREE.BoxGeometry(20, 18.5, 4),
+    new THREE.MeshBasicMaterial({ color: 0x9bdcff }),
+  );
+  cabinWindow.position.set(-22, 0, 16);
+  boat.add(cabinWindow);
+
+  const roof = new THREE.Mesh(new THREE.BoxGeometry(28, 20, 2), accentMat);
+  roof.position.set(-22, 0, 22);
+  roof.castShadow = true;
+  boat.add(roof);
+
+  const mast = new THREE.Mesh(
+    new THREE.BoxGeometry(2, 2, 22),
+    new THREE.MeshLambertMaterial({ color: 0x4a3320, flatShading: true }),
+  );
+  mast.position.set(8, 0, 22);
+  boat.add(mast);
+
+  const flag = new THREE.Mesh(
+    new THREE.BoxGeometry(0.6, 8, 5),
+    new THREE.MeshLambertMaterial({ color: 0xff5252, flatShading: true }),
+  );
+  flag.position.set(8, 5, 30);
+  boat.add(flag);
+
+  return boat;
+}
+
+const railwayLights = [];
+
+const RAILWAY_LIGHT_ON_HEX = 0xff3030;
+const RAILWAY_LIGHT_OFF_HEX = 0x4a1010;
+
+function animateRailwayLights() {
+  if (!railwayLights.length) return;
+  const onPhase = Math.floor(performance.now() / 280) % 2;
+  for (let i = 0; i < railwayLights.length; i++) {
+    const entry = railwayLights[i];
+    const lit = entry.phase === onPhase;
+    entry.material.color.setHex(
+      lit ? RAILWAY_LIGHT_ON_HEX : RAILWAY_LIGHT_OFF_HEX,
+    );
+  }
+}
+
+function RailwayCrossingSign(direction) {
+  const sign = new THREE.Group();
+
+  const poleMat = new THREE.MeshLambertMaterial({
+    color: 0xefefef,
+    flatShading: true,
+  });
+  const whiteMat = new THREE.MeshLambertMaterial({
+    color: 0xfafafa,
+    flatShading: true,
+  });
+  const blackMat = new THREE.MeshLambertMaterial({
+    color: 0x1a1a1a,
+    flatShading: true,
+  });
+  const yellowMat = new THREE.MeshLambertMaterial({
+    color: 0xffd84a,
+    flatShading: true,
+  });
+
+  const pole = new THREE.Mesh(new THREE.BoxGeometry(3.5, 3.5, 56), poleMat);
+  pole.position.z = 28;
+  pole.castShadow = true;
+  sign.add(pole);
+
+  const arm1 = new THREE.Mesh(new THREE.BoxGeometry(28, 4, 4), whiteMat);
+  arm1.position.z = 54;
+  arm1.rotation.y = Math.PI / 4;
+  arm1.castShadow = true;
+  sign.add(arm1);
+
+  const arm2 = new THREE.Mesh(new THREE.BoxGeometry(28, 4, 4), whiteMat);
+  arm2.position.z = 54;
+  arm2.rotation.y = -Math.PI / 4;
+  arm2.castShadow = true;
+  sign.add(arm2);
+
+  [-1, 1].forEach((dy, idx) => {
+    const lightMat = new THREE.MeshBasicMaterial({
+      color: RAILWAY_LIGHT_OFF_HEX,
+    });
+    const light = new THREE.Mesh(new THREE.BoxGeometry(6, 6, 6), lightMat);
+    light.position.set(0, dy * 10, 40);
+    sign.add(light);
+    railwayLights.push({ material: lightMat, phase: idx });
+
+    const halo = new THREE.Mesh(
+      new THREE.BoxGeometry(8, 8, 8),
+      new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.18,
+      }),
+    );
+    halo.position.copy(light.position);
+    sign.add(halo);
+  });
+
+  const panel = new THREE.Mesh(new THREE.BoxGeometry(2, 14, 12), yellowMat);
+  panel.position.set(direction * -3, 0, 22);
+  sign.add(panel);
+
+  const panelStripe = new THREE.Mesh(
+    new THREE.BoxGeometry(2.5, 10, 2),
+    blackMat,
+  );
+  panelStripe.position.set(direction * -3.6, 0, 22);
+  sign.add(panelStripe);
+
+  const base = new THREE.Mesh(new THREE.BoxGeometry(12, 12, 4), blackMat);
+  base.position.z = 2;
+  sign.add(base);
+
+  return sign;
+}
+
+function Rail(rowIndex) {
+  const rail = new THREE.Group();
+  rail.position.y = rowIndex * tileSize;
+
+  const groundMat = new THREE.MeshLambertMaterial({ color: 0x55504a });
+  const middle = new THREE.Mesh(
+    new THREE.PlaneGeometry(tilesPerRow * tileSize, tileSize),
+    groundMat,
+  );
+  middle.receiveShadow = true;
+  rail.add(middle);
+
+  const sideMat = new THREE.MeshLambertMaterial({ color: 0x3f3b35 });
+  const left = new THREE.Mesh(
+    new THREE.PlaneGeometry(tilesPerRow * tileSize, tileSize),
+    sideMat,
+  );
+  left.position.x = -tilesPerRow * tileSize;
+  rail.add(left);
+
+  const right = new THREE.Mesh(
+    new THREE.PlaneGeometry(tilesPerRow * tileSize, tileSize),
+    sideMat,
+  );
+  right.position.x = tilesPerRow * tileSize;
+  rail.add(right);
+
+  const tieMat = new THREE.MeshLambertMaterial({
+    color: 0x4a3320,
+    flatShading: true,
+  });
+  const tieSpacing = 14;
+  const totalSpan = tilesPerRow * tileSize * 3;
+  const tieCount = Math.ceil(totalSpan / tieSpacing);
+  const startX = -((tieCount - 1) / 2) * tieSpacing;
+  for (let i = 0; i < tieCount; i++) {
+    const tie = new THREE.Mesh(
+      new THREE.BoxGeometry(7, tileSize * 0.85, 2),
+      tieMat,
+    );
+    tie.position.set(startX + i * tieSpacing, 0, 1);
+    rail.add(tie);
+  }
+
+  const railMetalMat = new THREE.MeshLambertMaterial({
+    color: 0x9aa0a8,
+    flatShading: true,
+  });
+  [-1, 1].forEach((side) => {
+    const r = new THREE.Mesh(
+      new THREE.BoxGeometry(totalSpan, 2, 3),
+      railMetalMat,
+    );
+    r.position.set(0, side * 9, 3);
+    rail.add(r);
+  });
+
+  const signL = RailwayCrossingSign(-1);
+  signL.position.set(
+    -(tilesPerRow / 2) * tileSize,
+    -tileSize / 2 + 4,
+    0,
+  );
+  rail.add(signL);
+
+  const signR = RailwayCrossingSign(1);
+  signR.position.set(
+    (tilesPerRow / 2) * tileSize,
+    -tileSize / 2 + 4,
+    0,
+  );
+  rail.add(signR);
+
+  rail.add(MapEdgeRocks());
+
+  return rail;
+}
+
+function Train(initialTileIndex, direction, isLocomotive, color) {
+  const car = new THREE.Group();
+  car.position.x = initialTileIndex * tileSize;
+  if (!direction) car.rotation.z = Math.PI;
+
+  if (isLocomotive) {
+    const body = new THREE.Mesh(
+      new THREE.BoxGeometry(72, 36, 30),
+      new THREE.MeshLambertMaterial({ color, flatShading: true }),
+    );
+    body.position.set(-4, 0, 22);
+    body.castShadow = true;
+    body.receiveShadow = true;
+    car.add(body);
+
+    const cabin = new THREE.Mesh(
+      new THREE.BoxGeometry(28, 30, 22),
+      new THREE.MeshLambertMaterial({ color: 0x222a44, flatShading: true }),
+    );
+    cabin.position.set(-22, 0, 48);
+    cabin.castShadow = true;
+    car.add(cabin);
+
+    const window1 = new THREE.Mesh(
+      new THREE.BoxGeometry(2, 14, 8),
+      new THREE.MeshBasicMaterial({ color: 0x9bdcff }),
+    );
+    window1.position.set(-7.5, 0, 50);
+    car.add(window1);
+
+    const stack = new THREE.Mesh(
+      new THREE.BoxGeometry(8, 8, 14),
+      new THREE.MeshLambertMaterial({ color: 0x222222, flatShading: true }),
+    );
+    stack.position.set(16, 0, 44);
+    stack.castShadow = true;
+    car.add(stack);
+
+    const stackTop = new THREE.Mesh(
+      new THREE.BoxGeometry(10, 10, 2),
+      new THREE.MeshLambertMaterial({ color: 0x000000, flatShading: true }),
+    );
+    stackTop.position.set(16, 0, 51.5);
+    car.add(stackTop);
+
+    const headlight = new THREE.Mesh(
+      new THREE.BoxGeometry(2, 6, 6),
+      new THREE.MeshBasicMaterial({ color: 0xfff4b0 }),
+    );
+    headlight.position.set(33, 0, 22);
+    car.add(headlight);
+
+    const grill = new THREE.Mesh(
+      new THREE.BoxGeometry(8, 32, 14),
+      new THREE.MeshLambertMaterial({ color: 0xc9c9c9, flatShading: true }),
+    );
+    grill.position.set(36, 0, 12);
+    grill.castShadow = true;
+    car.add(grill);
+  } else {
+    const body = new THREE.Mesh(
+      new THREE.BoxGeometry(72, 34, 30),
+      new THREE.MeshLambertMaterial({ color, flatShading: true }),
+    );
+    body.position.z = 22;
+    body.castShadow = true;
+    body.receiveShadow = true;
+    car.add(body);
+
+    const top = new THREE.Mesh(
+      new THREE.BoxGeometry(70, 36, 2),
+      new THREE.MeshLambertMaterial({ color: 0x42485a, flatShading: true }),
+    );
+    top.position.z = 38;
+    car.add(top);
+
+    const sideStripe = new THREE.Mesh(
+      new THREE.BoxGeometry(60, 36.5, 4),
+      new THREE.MeshBasicMaterial({ color: 0x9bdcff }),
+    );
+    sideStripe.position.z = 28;
+    car.add(sideStripe);
+
+    [-1, 1].forEach((side) => {
+      const coupler = new THREE.Mesh(
+        new THREE.BoxGeometry(3, 5, 3),
+        new THREE.MeshLambertMaterial({ color: 0x444444, flatShading: true }),
+      );
+      coupler.position.set(side * 38, 0, 12);
+      car.add(coupler);
+    });
+  }
+
+  [-26, 0, 26].forEach((x) => {
+    const wheel = new THREE.Mesh(
+      new THREE.BoxGeometry(8, 36, 8),
+      new THREE.MeshLambertMaterial({ color: 0x222222, flatShading: true }),
+    );
+    wheel.position.set(x, 0, 5);
+    car.add(wheel);
+  });
+
+  return car;
 }
 
 function Tree(tileIndex, height, variant = "round") {
@@ -2126,6 +2786,9 @@ function endsUpInValidPosition(currentPosition, moves) {
     return false;
   }
 
+  // River row moves are always queueable; landing is validated against live boat
+  // positions in evaluateBoatRide() at stepCompleted time.
+
   return true;
 }
 
@@ -2146,6 +2809,13 @@ function generateRow(rowIndex) {
     return generateCheckpointMetadata();
   }
 
+  // River guard: place a river one row before each checkpoint
+  if (rowIndex > 0 && rowIndex % CP_INTERVAL === CP_INTERVAL - 1) {
+    pendingRoadRowsInSegment = 0;
+    consecutiveRoadRows = 0;
+    return generateRiverMetadata();
+  }
+
   // Hard rule: after 4 consecutive road rows, next row must be grass.
   if (consecutiveRoadRows >= MAX_CONSECUTIVE_ROAD_ROWS) {
     pendingRoadRowsInSegment = 0;
@@ -2157,6 +2827,13 @@ function generateRow(rowIndex) {
     pendingRoadRowsInSegment -= 1;
     consecutiveRoadRows += 1;
     return generateRoadLaneMetadata();
+  }
+
+  // Occasional train track row — single row, breaks any road segment buildup
+  if (Math.random() < 0.1) {
+    pendingRoadRowsInSegment = 0;
+    consecutiveRoadRows = 0;
+    return generateTrainLaneMetadata();
   }
 
   const shouldStartRoadSegment = Math.random() < 0.65;
@@ -2183,6 +2860,25 @@ function generateCheckpointMetadata() {
   return { type: "forest", trees: [], isCheckpoint: true };
 }
 
+function generateRiverMetadata() {
+  const direction = randomElement([true, false]);
+  const speed = randomElement([45, 60, 75]);
+
+  const boatCount = 3;
+  const stride = Math.max(1, Math.floor(tilesPerRow / boatCount));
+  const offset = THREE.MathUtils.randInt(0, stride - 1);
+  const boats = Array.from({ length: boatCount }, (_, i) => {
+    let tile = minTileIndex + offset + i * stride;
+    if (tile > maxTileIndex) tile -= tilesPerRow;
+    return {
+      initialTileIndex: tile,
+      color: randomElement([0xc94a4a, 0xe6a23c, 0x7c5cff, 0x4ecdc4, 0xf76b8a]),
+    };
+  });
+
+  return { type: "river", boats, direction, speed };
+}
+
 function randomElement(array) {
   return array[Math.floor(Math.random() * array.length)];
 }
@@ -2207,7 +2903,7 @@ function generateForesMetadata() {
 
 function generateCarLaneMetadata() {
   const direction = randomElement([true, false]);
-  const speed = randomElement([100, 130, 160]);
+  const speed = randomElement([70, 90, 110]);
 
   const occupiedTiles = new Set();
 
@@ -2233,7 +2929,7 @@ function generateCarLaneMetadata() {
 
 function generateTruckLaneMetadata() {
   const direction = randomElement([true, false]);
-  const speed = randomElement([200, 250, 300]);
+  const speed = randomElement([130, 165, 200]);
 
   const occupiedTiles = new Set();
 
@@ -2258,12 +2954,53 @@ function generateTruckLaneMetadata() {
   return { type: "truck", direction, speed, vehicles };
 }
 
+function generateTrainLaneMetadata() {
+  const direction = randomElement([true, false]);
+  const speed = randomElement([240, 280, 320]);
+
+  const carCount = 6;
+  const segmentSpacing = 2;
+  const maxStart = Math.max(
+    minTileIndex,
+    maxTileIndex - (carCount - 1) * segmentSpacing,
+  );
+  const startTile = THREE.MathUtils.randInt(minTileIndex, maxStart);
+  const locomotiveColor = randomElement([0x1a3a6e, 0x6b1f1f, 0x3a5e2c, 0x4a2c5e]);
+  const carColor = randomElement([0x9a5b3f, 0xc7a04a, 0x4d738a, 0x6f7a8c]);
+
+  const vehicles = Array.from({ length: carCount }, (_, i) => ({
+    initialTileIndex: startTile + i * segmentSpacing,
+    color: i === 0 ? locomotiveColor : carColor,
+    isLocomotive: i === 0,
+  }));
+
+  return { type: "train", direction, speed, vehicles };
+}
+
 const moveClock = new THREE.Clock(false);
 
 function animatePlayer() {
-  if (!movesQueue.length) return;
+  if (!movesQueue.length) {
+    // Idle ride: while standing on a moving boat, sync visual position and check bounds
+    if (position.ridingBoat && !gameOver) {
+      const boatX = position.ridingBoat.position.x;
+      const newTile = Math.round(boatX / tileSize);
+      if (newTile < minTileIndex || newTile > maxTileIndex) {
+        onDrown();
+        return;
+      }
+      player.position.x = boatX;
+      player.position.z = PLAYER_BOAT_RIDE_Z;
+      position.currentTile = newTile;
+    }
+    return;
+  }
 
-  if (!moveClock.running) moveClock.start();
+  if (!moveClock.running) {
+    moveClock.start();
+    moveStartX = player.position.x;
+    moveStartY = player.position.y;
+  }
 
   const stepTime = 0.2; // Seconds it takes to take a step
   const progress = Math.min(1, moveClock.getElapsedTime() / stepTime);
@@ -2279,18 +3016,16 @@ function animatePlayer() {
 }
 
 function setPosition(progress) {
-  const startX = position.currentTile * tileSize;
-  const startY = position.currentRow * tileSize;
-  let endX = startX;
-  let endY = startY;
+  let endX = position.currentTile * tileSize;
+  let endY = position.currentRow * tileSize;
 
   if (movesQueue[0] === "left") endX -= tileSize;
   if (movesQueue[0] === "right") endX += tileSize;
   if (movesQueue[0] === "forward") endY += tileSize;
   if (movesQueue[0] === "backward") endY -= tileSize;
 
-  player.position.x = THREE.MathUtils.lerp(startX, endX, progress);
-  player.position.y = THREE.MathUtils.lerp(startY, endY, progress);
+  player.position.x = THREE.MathUtils.lerp(moveStartX, endX, progress);
+  player.position.y = THREE.MathUtils.lerp(moveStartY, endY, progress);
   player.children[0].position.z = Math.sin(progress * Math.PI) * 8;
 }
 
@@ -2318,11 +3053,15 @@ function animateVehicles() {
     ? Math.pow(SPEED_MULT_PER_CP, bet.currentCp)
     : 1;
 
-  // Animate cars and trucks
+  const beginningOfRow = (minTileIndex - 2) * tileSize;
+  const endOfRow = (maxTileIndex + 2) * tileSize;
+
   metadata.forEach((rowData) => {
-    if (rowData.type === "car" || rowData.type === "truck") {
-      const beginningOfRow = (minTileIndex - 2) * tileSize;
-      const endOfRow = (maxTileIndex + 2) * tileSize;
+    if (
+      rowData.type === "car" ||
+      rowData.type === "truck" ||
+      rowData.type === "train"
+    ) {
       const effectiveSpeed = rowData.speed * speedMultiplier;
 
       rowData.vehicles.forEach(({ ref }) => {
@@ -2338,6 +3077,26 @@ function animateVehicles() {
             ref.position.x < beginningOfRow
               ? endOfRow
               : ref.position.x - effectiveSpeed * delta;
+        }
+      });
+    }
+
+    if (rowData.type === "river" && rowData.boats) {
+      const boatSpeed = rowData.speed;
+
+      rowData.boats.forEach(({ ref }) => {
+        if (!ref) return;
+
+        if (rowData.direction) {
+          ref.position.x =
+            ref.position.x > endOfRow
+              ? beginningOfRow
+              : ref.position.x + boatSpeed * delta;
+        } else {
+          ref.position.x =
+            ref.position.x < beginningOfRow
+              ? endOfRow
+              : ref.position.x - boatSpeed * delta;
         }
       });
     }
@@ -2461,7 +3220,7 @@ function hitTest() {
   const row = metadata[position.currentRow - 1];
   if (!row) return;
 
-  if (row.type === "car" || row.type === "truck") {
+  if (row.type === "car" || row.type === "truck" || row.type === "train") {
     const playerBoundingBox = new THREE.Box3();
     playerBoundingBox.setFromObject(player);
 
@@ -3716,6 +4475,7 @@ window.addEventListener("resize", () => {
 function animate() {
   animateVehicles();
   animatePlayer();
+  animateRailwayLights();
   hitTest();
 
   renderer.render(scene, camera);
