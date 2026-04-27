@@ -34,23 +34,8 @@ export const env = {
 
   // Blockchain
   NETWORK_NAME: optionalEnv("NETWORK_NAME", "base-sepolia"),
-  RPC_URL: optionalEnv(
-    "RPC_URL",
-    process.env.BASE_RPC_URL ??
-      process.env.CELO_RPC_URL ??
-      process.env.MONAD_RPC_URL ??
-      "https://sepolia.base.org",
-  ),
-  CHAIN_ID: parseInt(
-    optionalEnv(
-      "CHAIN_ID",
-      process.env.BASE_CHAIN_ID ??
-        process.env.CELO_CHAIN_ID ??
-        process.env.MONAD_CHAIN_ID ??
-        "84532",
-    ),
-    10,
-  ),
+  RPC_URL: optionalEnv("RPC_URL", "https://sepolia.base.org"),
+  CHAIN_ID: parseInt(optionalEnv("CHAIN_ID", "84532"), 10),
   NATIVE_TOKEN_SYMBOL: optionalEnv("NATIVE_TOKEN_SYMBOL", "ETH"),
   MIN_RECOMMENDED_NATIVE_BALANCE: Number.parseFloat(optionalEnv("MIN_RECOMMENDED_NATIVE_BALANCE", "0.005")),
 
