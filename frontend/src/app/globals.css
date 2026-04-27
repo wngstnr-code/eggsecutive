@@ -6774,23 +6774,20 @@ canvas.game {
     gap: 3px;
   }
 
-  .play-bottom-navbar {
+  .play-bottom-navbar-v2 {
     position: fixed;
     left: 0 !important;
     right: 0 !important;
     margin-inline: auto !important;
     transform: none !important;
-    bottom: calc(12px + var(--play-safe-bottom)) !important;
-    width: var(--play-main-width);
+    bottom: 0 !important;
+    width: 100vw;
     height: 72px;
-    padding: 8px 16px;
-    border-radius: 16px;
-    border: 1px solid rgba(184, 212, 255, 0.32);
-    background: linear-gradient(180deg,
-        rgba(9, 14, 26, 0.78) 0%,
-        rgba(17, 26, 43, 0.85) 100%);
-    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.38);
-    backdrop-filter: blur(8px);
+    padding: 0 24px calc(env(safe-area-inset-bottom, 0px));
+    background: #151f33; /* Solid dark color to match reference */
+    border-top: 1px solid rgba(184, 212, 255, 0.15);
+    border-radius: 0 !important; /* Force no rounded corners */
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.4);
     box-sizing: border-box;
     display: flex;
     align-items: center;
@@ -6799,55 +6796,96 @@ canvas.game {
     pointer-events: auto;
   }
 
-  .play-bottom-navbar.hidden {
+  .play-bottom-navbar-v2.hidden {
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
   }
 
-  .play-bottom-nav-item {
-    width: 116px;
-    min-height: 56px;
-    border-radius: 12px;
-    border: 2px solid #2c3e50;
+  /* Reset #leaderboard-btn inside navbar-v2 */
+  .play-bottom-navbar-v2 #leaderboard-btn {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    min-height: 0 !important;
+    min-width: 0 !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    color: #8a9fb5 !important;
+  }
+  
+  .play-bottom-navbar-v2 #leaderboard-btn:active {
+    color: #fff !important;
+  }
+
+  .play-bottom-nav-tab {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #8a9fb5; /* Slightly muted blue/grey */
     font-family: inherit;
-    font-size: 9px;
-    letter-spacing: 0.7px;
-    color: #fff;
-    box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.34);
+    font-size: 7px;
+    letter-spacing: 0.8px;
     cursor: pointer;
-    display: inline-flex;
+    display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    text-align: center;
-    padding: 0 10px;
+    gap: 6px;
+    padding: 0;
+    transition: color 0.2s ease;
   }
 
-  .play-bottom-nav-item:active:not(:disabled) {
-    transform: translate(2px, 2px);
-    box-shadow: 1px 2px 0 rgba(0, 0, 0, 0.34);
+  .play-bottom-nav-tab span {
+    white-space: nowrap;
   }
 
-  .play-bottom-nav-deposit {
-    border-color: #733f11;
-    background: linear-gradient(180deg, #ffb96a 0%, #d16b18 100%);
+  .play-bottom-nav-tab:active {
+    color: #fff;
+    transform: scale(0.95);
   }
 
-  .play-bottom-nav-deposit.busy {
-    border-color: #8b6a00;
-    background: linear-gradient(180deg, #ffe066 0%, #d7a200 100%);
+  .play-bottom-nav-center {
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+    padding-bottom: 12px;
+    font-size: 8px;
+    letter-spacing: 0.8px;
+    color: #fff;
+  }
+
+  .play-bottom-nav-play-circle {
+    position: absolute;
+    top: -26px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: none; /* Removed hard border for floating look */
+    background: linear-gradient(180deg, #ffe066 0%, #e7a303 100%);
     color: #2c1810;
+    box-shadow: 0 4px 16px rgba(231, 163, 3, 0.5), inset 0 2px 4px rgba(255,255,255,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
   }
 
-  .play-bottom-nav-deposit:disabled {
-    opacity: 0.88;
-    cursor: not-allowed;
+  .play-bottom-nav-play-circle svg {
+    margin-left: 3px; /* Optically center the play triangle */
+    width: 28px;
+    height: 28px;
   }
 
-  .play-bottom-nav-leaderboard {
-    border-color: #1e5e42;
-    background: linear-gradient(180deg, #6ddcab 0%, #2b9a6d 100%);
-    color: #092f20;
+  .play-bottom-nav-play-circle:active {
+    transform: translateY(2px) scale(0.95);
+    box-shadow: 0 2px 6px rgba(231, 163, 3, 0.4);
   }
 
   #bet-btn {
@@ -7014,12 +7052,24 @@ canvas.game {
     font-size: 11px;
   }
 
-  .play-bottom-nav-item {
-    width: 96px;
-    min-height: 52px;
-    font-size: 8px;
+  .play-bottom-nav-tab {
+    font-size: 7px;
     letter-spacing: 0.5px;
-    padding: 0 8px;
+  }
+
+  .play-bottom-nav-center {
+    font-size: 7px;
+  }
+
+  .play-bottom-nav-play-circle {
+    width: 54px;
+    height: 54px;
+    top: -24px;
+  }
+
+  .play-bottom-nav-play-circle svg {
+    width: 24px;
+    height: 24px;
   }
 
   #bet-btn {

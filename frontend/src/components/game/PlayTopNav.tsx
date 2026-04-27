@@ -851,20 +851,43 @@ export function PlayTopNav() {
         >
           MANAGE MONEY
         </button>
-          <div className={`play-bottom-navbar${isMenuOpen ? " hidden" : ""}`}>
+          <div className={`play-bottom-navbar-v2${isMenuOpen ? " hidden" : ""}`}>
             <button
               type="button"
-              className="play-bottom-nav-item play-bottom-nav-deposit"
+              className="play-bottom-nav-tab"
               onClick={onManageMoneyClick}
             >
-              MANAGE MONEY
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="6" width="20" height="12" rx="2" />
+                <circle cx="12" cy="12" r="2" />
+                <path d="M6 12h.01M18 12h.01" />
+              </svg>
+              <span>MANAGE MONEY</span>
             </button>
+            <div className="play-bottom-nav-center">
+              <button
+                type="button"
+                className="play-bottom-nav-play-circle"
+                onClick={() => {
+                  const betBtn = document.getElementById("bet-btn");
+                  if (betBtn) betBtn.click();
+                }}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </button>
+              <span>PLAY</span>
+            </div>
             <button
               type="button"
               id="leaderboard-btn"
-              className="play-bottom-nav-item play-bottom-nav-leaderboard"
+              className="play-bottom-nav-tab"
             >
-              LEADERBOARD
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 20V10M12 20V4M6 20V12" />
+              </svg>
+              <span>LEADERBOARD</span>
             </button>
           </div>
         <div
