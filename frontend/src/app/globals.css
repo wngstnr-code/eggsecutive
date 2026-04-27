@@ -6937,12 +6937,13 @@ canvas.game {
   .score-card {
     grid-area: score;
     width: 100% !important;
-    padding: 8px 16px;
-    border-radius: 12px;
-    background: rgba(17, 26, 43, 0.65) !important;
-    backdrop-filter: blur(8px);
+    box-sizing: border-box !important;
+    padding: 8px 20px;
+    border-radius: 14px;
+    background: rgba(17, 26, 43, 0.7) !important;
+    backdrop-filter: blur(12px);
     border: 1px solid rgba(184, 212, 255, 0.15) !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -6951,33 +6952,80 @@ canvas.game {
 
   .score-card-main {
     width: 100%;
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 1fr 1px 80px 1px 1fr;
     align-items: center;
+    justify-items: center;
+    height: 36px;
   }
 
   .score-metric {
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     transform: none !important;
+    white-space: nowrap;
+    height: 100%;
   }
 
   .score-meta {
     font-size: 6px;
-    letter-spacing: 0.7px;
-    margin-bottom: 4px;
+    letter-spacing: 0.8px;
+    margin-bottom: 3px;
     line-height: 1;
+    color: #e2eeff;
+    opacity: 0.6;
+    text-transform: uppercase;
+  }
+
+  /* Unify all HUD values */
+  #score,
+  #score-cp,
+  #timer {
+    font-size: 15px !important;
+    line-height: 1 !important;
+    font-weight: normal;
+    text-shadow: none !important;
+    transition: color 0.3s ease;
+    display: flex;
+    align-items: center;
+    height: 15px;
   }
 
   .score-card .stat-value,
   .score-cp-value {
-    font-size: 14px !important;
+    font-size: 15px !important;
     line-height: 1 !important;
   }
 
+  .hud-divider {
+    width: 1px;
+    height: 20px;
+    background: linear-gradient(to bottom, transparent, rgba(80, 227, 194, 0.4), transparent);
+    box-shadow: 0 0 4px rgba(80, 227, 194, 0.2);
+  }
+
   .score-separator {
-    width: 80px; /* Leave an empty gap for the timer */
+    grid-column: 3;
+    width: 80px;
+    height: 100%;
+    opacity: 0;
+    margin: 0;
+  }
+
+  /* Timer Flash Animation */
+  @keyframes timer-pulse {
+    0%, 100% { opacity: 1; color: #ff4d4d; }
+    50% { opacity: 0.5; color: #ffffff; }
+  }
+
+  .timer-flash {
+    animation: timer-pulse 0.5s infinite;
+  }
+
+  .score-separator {
+    width: 80px;
     height: 0;
     opacity: 0;
     margin: 0;
@@ -7007,8 +7055,7 @@ canvas.game {
     align-self: center;
     width: 80px !important;
     min-width: 80px !important;
-    height: auto;
-    min-height: 0;
+    height: 36px;
     padding: 0;
     border-radius: 0;
     background: transparent !important;
@@ -7024,14 +7071,21 @@ canvas.game {
 
   #timer-card .stat-label {
     font-size: 6px;
-    margin-bottom: 4px;
+    margin-bottom: 3px;
     letter-spacing: 0.8px;
     line-height: 1;
+    color: #e2eeff;
+    opacity: 0.6;
+    text-transform: uppercase;
   }
 
   #timer-card .stat-value {
-    font-size: 14px !important;
+    font-size: 15px !important;
     line-height: 1 !important;
+    text-shadow: none !important;
+    display: flex;
+    align-items: center;
+    height: 15px;
   }
 
   #controls {

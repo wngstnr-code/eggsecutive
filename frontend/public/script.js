@@ -894,6 +894,15 @@ function renderTimer(ms, atCp) {
 
   if (labelEl) labelEl.innerText = atCp ? "AT CP" : "RUSH";
 
+  // Logic for timer colors and flashing
+  if (bet.active && ms <= 10000) {
+    el.classList.add("timer-flash");
+    el.style.color = ""; // Animation handles color
+  } else {
+    el.classList.remove("timer-flash");
+    el.style.color = "#50e3c2"; // Start green
+  }
+
   if (card) {
     if (ms < 15000 && bet.active) card.classList.add("timer-warning");
     else card.classList.remove("timer-warning");
@@ -925,7 +934,13 @@ function renderBetHud() {
   if (stakeEl) stakeEl.innerText = formatUsdAmount(bet.stake);
   if (multEl) multEl.innerText = mult.toFixed(2) + "x";
   if (payEl) payEl.innerText = formatUsdAmount(payout);
-  if (scoreCpEl) scoreCpEl.innerText = String(bet.currentCp);
+  if (scoreCpEl) {
+    scoreCpEl.innerText = String(bet.currentCp);
+    // Change CP color per checkpoint
+    const cpColors = ["#ffffff", "#ffb703", "#50e3c2", "#fb8500", "#9b5de5", "#06d6a0", "#ff4d4d"];
+    const cpColorIndex = bet.currentCp % cpColors.length;
+    scoreCpEl.style.color = cpColors[cpColorIndex];
+  }
 
   if (headKickerEl) {
     headKickerEl.textContent = bet.active ? "Live Bet" : "Run Summary";
@@ -1806,7 +1821,13 @@ function stepCompleted() {
   }
 
   const scoreDOM = document.getElementById("score");
-  if (scoreDOM) scoreDOM.innerText = position.currentRow.toString();
+  if (scoreDOM) {
+    scoreDOM.innerText = position.currentRow.toString();
+    // Change color every 20 hops
+    const colors = ["#ffffff", "#50e3c2", "#ffb703", "#ff70a6", "#70d6ff", "#ff9770", "#ffd670", "#e9ff70"];
+    const colorIndex = Math.floor(position.currentRow / 20) % colors.length;
+    scoreDOM.style.color = colors[colorIndex];
+  }
 }
 
 function Renderer() {
