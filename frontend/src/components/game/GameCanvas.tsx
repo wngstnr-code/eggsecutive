@@ -161,24 +161,6 @@ export function GameCanvas({ backgroundMode = false }: GameCanvasProps) {
           </div>
 
           <div className="odds-info">
-            <p className="odds-title">VALUE RISK</p>
-            <div className="odds-note-list">
-              <div className="odds-note-item">
-                <span className="dot dot-yellow" aria-hidden="true" /> Starting
-                a live run spends your selected stake from your vault balance.
-              </div>
-              <div className="odds-note-item">
-                <span className="dot dot-red" aria-hidden="true" /> If you lose
-                before cash out, the selected stake is lost.
-              </div>
-              <div className="odds-note-item">
-                <span className="dot dot-green" aria-hidden="true" /> If you win
-                and cash out, the stake returns with payout reward.
-              </div>
-            </div>
-          </div>
-
-          <div className="odds-info">
             <p className="odds-title">RUN RULES</p>
             <div className="odds-row">
               <span className="odds-key">Start multiplier</span>
