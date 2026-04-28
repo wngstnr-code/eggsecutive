@@ -2506,11 +2506,11 @@ canvas.game {
 
 .play-passport-card .play-passport-base-logo,
 .play-passport-base-logo {
-  width: 22px;
-  height: 22px;
+  width: 30px;
+  height: 30px;
   max-width: none;
-  min-width: 22px;
-  min-height: 22px;
+  min-width: 30px;
+  min-height: 30px;
   flex: 0 0 auto;
   display: inline-block;
   border-radius: 0 !important;
@@ -3378,10 +3378,10 @@ canvas.game {
   }
 
   .play-passport-card .play-passport-base-logo {
-    width: 16px;
-    height: 16px;
-    min-width: 16px;
-    min-height: 16px;
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    min-height: 20px;
   }
 
   .play-passport-card .play-passport-base-text {
