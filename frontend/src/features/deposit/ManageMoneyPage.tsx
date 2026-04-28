@@ -37,7 +37,7 @@ function readWalletStatus(flow: DepositFlowViewModel) {
 function readPrimaryLabel(flow: DepositFlowViewModel) {
   if (flow.isDepositBusy) return "PROCESSING...";
   if (flow.isApproveBusy) return "APPROVING...";
-  if (flow.needsApproval) return "APPROVE & DEPOSIT";
+  if (flow.needsApproval) return "DEPOSIT";
   return "DEPOSIT TO VAULT";
 }
 
@@ -279,7 +279,7 @@ export function ManageMoneyPage() {
                 disabled={flow.disableFaucetButton}
                 onClick={handleFaucetClick}
               >
-                {flow.isFaucetBusy ? "REQUESTING FAUCET..." : "REQUEST TESTNET FAUCET"}
+                {flow.isFaucetBusy ? "CLAIMING FAUCET..." : "CLAIM FAUCET"}
               </button>
             </div>
 

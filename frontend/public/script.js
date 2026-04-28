@@ -344,6 +344,25 @@ function dispatchPlayStatus({
   );
 }
 
+let liveBetNavUrgent = false;
+
+function syncLiveBetNavState(timerRemainingMs) {
+  if (!document.body) return;
+
+  const live = Boolean(bet.active && !bet.reconnecting);
+  if (typeof timerRemainingMs === "number" && isFinite(timerRemainingMs)) {
+    liveBetNavUrgent = live && timerRemainingMs <= 10000;
+  } else if (!live) {
+    liveBetNavUrgent = false;
+  }
+
+  document.body.classList.toggle("chicken-bet-live", live);
+  document.body.classList.toggle(
+    "chicken-bet-live-urgent",
+    live && liveBetNavUrgent,
+  );
+}
+
 function syncLiveBetStatus() {
   if (!bet.active || settlementPending || bet.reconnecting) {
     lastLiveBetStatusMessage = "";
@@ -465,6 +484,8 @@ function setDepositButtonState(label = "DEPOSIT", busy = false) {
 }
 
 function setBetButtonState() {
+  syncLiveBetNavState();
+
   const betBtn = document.getElementById("bet-btn");
   if (!betBtn) return;
 
@@ -897,6 +918,7 @@ function renderTimer(ms, atCp) {
   const el = document.getElementById("timer");
   const card = document.getElementById("timer-card");
   const labelEl = document.getElementById("timer-label");
+  syncLiveBetNavState(ms);
   if (!el) return;
 
   const totalSec = Math.ceil(ms / 1000);

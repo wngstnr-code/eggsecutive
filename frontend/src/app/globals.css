@@ -1176,7 +1176,7 @@ canvas.game {
 
 .score-card-main {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   justify-items: center;
   gap: 10px;
@@ -1199,6 +1199,7 @@ canvas.game {
 }
 
 .score-separator {
+  display: none;
   width: 32px;
   height: 0;
   opacity: 0;
@@ -1210,6 +1211,10 @@ canvas.game {
   height: 28px;
   background: linear-gradient(to bottom, transparent, rgba(80, 227, 194, 0.45), transparent);
   box-shadow: 0 0 4px rgba(80, 227, 194, 0.25);
+}
+
+.hud-divider-secondary {
+  display: none;
 }
 
 .score-card .stat-value {
@@ -4414,6 +4419,34 @@ canvas.game {
   line-height: 1.4;
 }
 
+.home-wordmark {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0;
+  text-transform: uppercase;
+  font-smooth: always;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+}
+
+.home-wordmark-egg {
+  color: #ffffff;
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.45),
+    0 8px 18px rgba(4, 10, 20, 0.35);
+}
+
+.home-wordmark-rest {
+  color: #f7c44a;
+  background: linear-gradient(180deg, #fff1b3 0%, #f6c24a 45%, #c48a1f 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow:
+    0 1px 0 rgba(255, 241, 179, 0.4),
+    0 8px 18px rgba(6, 12, 24, 0.35);
+}
+
 .home-nav-login {
   min-width: 108px;
   padding: 8px 12px;
@@ -4862,7 +4895,7 @@ canvas.game {
 .home-title {
   margin: 0;
   max-width: 8ch;
-  font-size: clamp(40px, 8vw, 92px);
+  font-size: clamp(34px, 7vw, 78px);
   line-height: 1.04;
   color: #fff7d6;
   text-shadow: 0 12px 28px rgba(7, 15, 29, 0.38);
@@ -7002,6 +7035,35 @@ canvas.game {
     column-gap: 2px;
     z-index: 33;
     pointer-events: auto;
+    overflow: visible;
+    transition:
+      transform 0.36s cubic-bezier(0.2, 0.9, 0.2, 1),
+      opacity 0.2s ease,
+      box-shadow 0.2s ease;
+    will-change: transform;
+  }
+
+  .play-bottom-navbar-v2::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: -5px;
+    width: min(128px, 36vw);
+    height: 6px;
+    border-radius: 999px;
+    background: linear-gradient(90deg,
+        rgba(126, 244, 201, 0) 0%,
+        rgba(126, 244, 201, 0.92) 50%,
+        rgba(126, 244, 201, 0) 100%);
+    box-shadow: 0 0 18px rgba(126, 244, 201, 0.5);
+    opacity: 0;
+    transform: translateX(-50%) scaleX(0.65);
+    pointer-events: none;
+    transition:
+      opacity 0.18s ease,
+      transform 0.2s ease,
+      background 0.18s ease,
+      box-shadow 0.18s ease;
   }
 
   .play-bottom-navbar-v2.hidden {
@@ -7031,6 +7093,7 @@ canvas.game {
     text-align: center;
     transition:
       color 0.2s ease,
+      opacity 0.18s ease,
       transform 0.1s ease,
       filter 0.1s ease;
   }
@@ -7073,6 +7136,9 @@ canvas.game {
     letter-spacing: 0.8px;
     color: #fff;
     line-height: 1;
+    transition:
+      opacity 0.18s ease,
+      transform 0.18s ease;
   }
 
   .play-bottom-navbar-v2 > :not(:last-child)::after {
@@ -7109,7 +7175,9 @@ canvas.game {
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    animation: play-button-pulse 1.45s ease-in-out infinite;
     transition: transform 0.1s ease, box-shadow 0.1s ease;
+    will-change: transform, box-shadow;
   }
 
   .play-bottom-nav-play-circle svg {
@@ -7120,8 +7188,72 @@ canvas.game {
   }
 
   .play-bottom-nav-play-circle:active {
+    animation: none;
     transform: translateY(2px) scale(0.95);
     box-shadow: 0 2px 6px rgba(231, 163, 3, 0.4);
+  }
+
+  body.chicken-bet-live .play-bottom-navbar-v2:not(.hidden) {
+    transform: translateY(calc(100% - 10px)) !important;
+    pointer-events: none;
+    box-shadow: none;
+  }
+
+  body.chicken-bet-live .play-bottom-navbar-v2:not(.hidden)::before {
+    opacity: 1;
+    transform: translateX(-50%) scaleX(1);
+    animation: live-navbar-pulse 1.05s ease-in-out infinite;
+  }
+
+  body.chicken-bet-live .play-bottom-navbar-v2:not(.hidden) > * {
+    opacity: 0;
+    transform: translateY(8px);
+    pointer-events: none;
+  }
+
+  body.chicken-bet-live-urgent .play-bottom-navbar-v2:not(.hidden)::before {
+    background: linear-gradient(90deg,
+        rgba(255, 82, 82, 0) 0%,
+        rgba(255, 82, 82, 1) 50%,
+        rgba(255, 82, 82, 0) 100%);
+    box-shadow: 0 0 22px rgba(255, 82, 82, 0.7);
+    animation: live-navbar-danger 0.45s steps(2, end) infinite;
+  }
+
+  @keyframes play-button-pulse {
+    0%, 100% {
+      transform: translateY(0) scale(1);
+      box-shadow: 0 4px 16px rgba(231, 163, 3, 0.5), inset 0 2px 4px rgba(255,255,255,0.4);
+    }
+
+    50% {
+      transform: translateY(-2px) scale(1.07);
+      box-shadow: 0 8px 26px rgba(255, 214, 66, 0.72), inset 0 2px 5px rgba(255,255,255,0.5);
+    }
+  }
+
+  @keyframes live-navbar-pulse {
+    0%, 100% {
+      opacity: 0.58;
+      transform: translateX(-50%) scaleX(0.76);
+    }
+
+    50% {
+      opacity: 1;
+      transform: translateX(-50%) scaleX(1.08);
+    }
+  }
+
+  @keyframes live-navbar-danger {
+    0%, 100% {
+      opacity: 1;
+      transform: translateX(-50%) scaleX(1.08);
+    }
+
+    50% {
+      opacity: 0.32;
+      transform: translateX(-50%) scaleX(0.74);
+    }
   }
 
   #bet-btn {
@@ -7217,6 +7349,7 @@ canvas.game {
   }
 
   .hud-divider {
+    display: block;
     width: 1px;
     height: 20px;
     background: linear-gradient(to bottom, transparent, rgba(80, 227, 194, 0.4), transparent);
@@ -7224,6 +7357,7 @@ canvas.game {
   }
 
   .score-separator {
+    display: block;
     grid-column: 3;
     width: 80px;
     height: 0;

@@ -32,9 +32,9 @@ export function GameCanvas({ backgroundMode = false }: GameCanvasProps) {
                   0
                 </span>
               </div>
-              <div className="hud-divider" />
+              <div className="hud-divider hud-divider-primary" />
               <div className="score-separator" aria-hidden="true" />
-              <div className="hud-divider" />
+              <div className="hud-divider hud-divider-secondary" />
               <div className="score-metric">
                 <span className="score-meta">CURRENT CP</span>
                 <span className="score-cp-value" id="score-cp">

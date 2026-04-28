@@ -74,21 +74,21 @@ const ABOUT_FEATURES = [
     title: "FAST ARCADE STAKES",
     copy: "Connect, run, and feel the multiplier rise before the crash catches up.",
     tone: "risk",
-    imageSrc: "/images/about-stakes.png",
+    imageSrc: "/images/1.png",
     imageAlt: "Eggsecutive arcade stakes preview",
   },
   {
     title: "CHECKPOINT CASH OUTS",
     copy: "Cash out at checkpoints or keep pushing for a bigger payout.",
     tone: "checkpoint",
-    imageSrc: "/images/about-stakes.png",
+    imageSrc: "/images/2.png",
     imageAlt: "Eggsecutive checkpoint cash out preview",
   },
   {
     title: "BASE WALLET FLOW",
     copy: "From wallet deposit to live play, the Base flow stays quick and simple.",
     tone: "wallet",
-    imageSrc: "/images/about-stakes.png",
+    imageSrc: "/images/3.png",
     imageAlt: "Eggsecutive wallet flow preview",
   },
 ];
@@ -427,7 +427,10 @@ export default function Home() {
           <div className="home-brand-badge">GM</div>
           <div className="home-brand-copy">
             <p className="home-brand-eyebrow">Base Arcade Risk Game</p>
-            <div className="home-brand-name">Eggsecutive</div>
+            <div className="home-brand-name home-wordmark">
+              <span className="home-wordmark-egg">EGG</span>
+              <span className="home-wordmark-rest">SECUTIVE</span>
+            </div>
           </div>
         </div>
 
@@ -554,7 +557,10 @@ export default function Home() {
                   </a>
                 </div>
               ) : null}
-              <h1 className="home-title">Eggsecutive</h1>
+              <h1 className="home-title home-wordmark">
+                <span className="home-wordmark-egg">EGG</span>
+                <span className="home-wordmark-rest">SECUTIVE</span>
+              </h1>
               <p className="home-subcopy">
                 Cross the road, stack the multiplier, and cash out before the
                 run crashes.
@@ -634,7 +640,12 @@ export default function Home() {
         <div className="home-shell home-shell-section">
           <div className="home-about-head">
             <h2 className="home-section-title home-about-title">
-              WHAT IS Eggsecutive?
+              WHAT IS{" "}
+              <span className="home-wordmark">
+                <span className="home-wordmark-egg">EGG</span>
+                <span className="home-wordmark-rest">SECUTIVE</span>
+              </span>
+              ?
             </h2>
             <p className="home-about-copy">
               Eggsecutive is a fast risk-reward demo where players cross lanes,
@@ -799,7 +810,10 @@ export default function Home() {
       <footer className="home-footer">
         <div className="home-shell home-footer-shell">
           <div>
-            <p className="home-preview-title">Eggsecutive</p>
+            <p className="home-preview-title home-wordmark">
+              <span className="home-wordmark-egg">EGG</span>
+              <span className="home-wordmark-rest">SECUTIVE</span>
+            </p>
             <h3 className="home-footer-title">
               Fast arcade risk with fixed-stake runs on Base.
             </h3>
