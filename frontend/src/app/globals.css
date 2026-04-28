@@ -1306,10 +1306,7 @@ canvas.game {
   box-shadow: 1px 2px 0 rgba(0, 0, 0, 0.35);
 }
 
-#leaderboard-modal.modal-bg,
-#stats-modal.modal-bg {
-  /* Inherits centering from .modal-bg */
-}
+
 
 .leaderboard-modal-box {
   background: #fdf6e3;
@@ -2227,9 +2224,7 @@ canvas.game {
   margin: 2px 0;
 }
 
-.play-menu-modal {
-  /* Inherits centering from .modal-bg */
-}
+
 
 .play-menu-box {
   background: #fdf6e3;
