@@ -972,13 +972,10 @@ export function PlayTopNav() {
             <p className="play-passport-kicker">CHICKEN TRUST PASSPORT</p>
             <h3 className="play-passport-title">PASSPORT CLAIMED</h3>
             <div className="play-passport-card">
-              <img
-                className="play-passport-base-logo"
-                src="/images/logo-base.png"
-                alt="Base logo"
-                loading="lazy"
-                draggable={false}
-              />
+              <div className="play-passport-base-badge" aria-label="Base">
+                <span className="play-passport-base-text">BASE</span>
+                <span className="play-passport-base-logo" aria-hidden="true" />
+              </div>
               <p className="play-passport-name">
                 {shortAddress(account || "")}
               </p>

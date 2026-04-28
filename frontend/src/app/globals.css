@@ -2388,12 +2388,15 @@ canvas.game {
   position: relative;
   max-width: 460px;
   width: calc(100% - 28px);
-  border: 4px solid #2f405a;
+  border: 3px solid #2c56b3;
   border-radius: 24px;
-  background: #ffffff;
+  background:
+    radial-gradient(120% 120% at 100% 0%, rgba(0, 82, 255, 0.3) 0%, transparent 48%),
+    linear-gradient(180deg, #0f1e4f 0%, #0a173f 58%, #091233 100%);
   box-shadow:
-    0 12px 38px rgba(0, 0, 0, 0.35),
-    9px 10px 0 rgba(0, 0, 0, 0.2);
+    inset 0 0 0 1px rgba(152, 187, 255, 0.25),
+    0 16px 44px rgba(2, 8, 24, 0.58),
+    9px 10px 0 rgba(0, 0, 0, 0.28);
   padding: 32px 24px 24px;
   display: flex;
   flex-direction: column;
@@ -2403,7 +2406,7 @@ canvas.game {
 .play-passport-kicker {
   margin: 0;
   text-align: center;
-  color: #6a4f99;
+  color: #a9c6ff;
   font-size: 10px;
   letter-spacing: 1.3px;
 }
@@ -2411,21 +2414,54 @@ canvas.game {
 .play-passport-title {
   margin: 0;
   text-align: center;
-  color: #243752;
+  color: #f2f7ff;
   font-size: 20px;
   letter-spacing: 0.9px;
 }
 
+.play-passport-box .close-btn {
+  border-color: #9ab8ff;
+  background: linear-gradient(180deg, #f3f8ff 0%, #dbe8ff 100%);
+  color: #153680;
+}
+
+/* Force passport popup palette so it wins over shared .modal-box styles */
+.play-passport-modal.modal-bg {
+  background: rgba(3, 9, 26, 0.72) !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+.play-passport-modal .modal-box.play-passport-box {
+  border: 3px solid #2c56b3 !important;
+  background:
+    radial-gradient(120% 120% at 100% 0%, rgba(0, 82, 255, 0.3) 0%, transparent 48%),
+    linear-gradient(180deg, #0f1e4f 0%, #0a173f 58%, #091233 100%) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(152, 187, 255, 0.25),
+    0 16px 44px rgba(2, 8, 24, 0.58),
+    9px 10px 0 rgba(0, 0, 0, 0.28) !important;
+}
+
+.play-passport-modal .play-passport-kicker {
+  color: #a9c6ff !important;
+}
+
+.play-passport-modal .play-passport-title {
+  color: #f2f7ff !important;
+}
+
 .play-passport-card {
-  border: 3px solid #3a2b5c;
+  --passport-base-accent: #0052ff;
+  border: 2px solid #8fb4ff;
   border-radius: 18px;
   background:
-    linear-gradient(115deg, rgba(255, 255, 255, 0.2) 0 34%, transparent 34%),
-    linear-gradient(145deg, #3f77b7 0%, #2b4e90 45%, #2a1142 100%);
+    linear-gradient(140deg, rgba(0, 82, 255, 0.16) 0 22%, transparent 22%),
+    linear-gradient(180deg, #ffffff 0%, #f3f8ff 52%, #e7f0ff 100%);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.2),
-    4px 5px 0 rgba(0, 0, 0, 0.22);
-  color: #f5fbff;
+    inset 0 0 0 1px rgba(255, 255, 255, 0.85),
+    inset 0 10px 24px rgba(0, 82, 255, 0.08),
+    0 10px 24px rgba(0, 47, 167, 0.2);
+  color: #12307a;
   min-height: 220px;
   padding: 32px 16px 18px;
   display: flex;
@@ -2437,44 +2473,60 @@ canvas.game {
 }
 
 .play-passport-card::before {
-  content: "BASE";
-  position: absolute;
-  bottom: 14px;
-  right: 14px;
-  font-size: 10px;
-  letter-spacing: 0.8px;
-  color: #ffe7b5;
-  z-index: 2;
+  content: none;
 }
 
 .play-passport-card::after {
   content: "";
   position: absolute;
-  width: 180px;
-  height: 180px;
-  border-radius: 999px;
-  top: -92px;
-  right: -70px;
-  background: rgba(255, 255, 255, 0.16);
+  width: 170px;
+  height: 170px;
+  border-radius: 24px;
+  top: -96px;
+  right: -72px;
+  background:
+    linear-gradient(135deg, rgba(0, 82, 255, 0.2), rgba(0, 82, 255, 0.06)),
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.26) 0 5px,
+      rgba(255, 255, 255, 0.04) 5px 10px
+    );
+  transform: rotate(15deg);
 }
 
-.play-passport-card .play-passport-base-logo {
+.play-passport-card .play-passport-base-badge {
   position: absolute;
   top: 12px;
-  left: 16px;
-  width: 42px;
-  height: 42px;
-  max-width: none;
-  min-width: 42px;
-  min-height: 42px;
-  flex: none;
-  align-self: flex-start;
-  display: block;
-  border-radius: 999px;
-  object-fit: cover;
-  object-position: center;
-  box-shadow: 0 2px 8px rgba(11, 16, 28, 0.28);
+  right: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   z-index: 2;
+}
+
+.play-passport-card .play-passport-base-logo,
+.play-passport-base-logo {
+  width: 22px;
+  height: 22px;
+  max-width: none;
+  min-width: 22px;
+  min-height: 22px;
+  flex: 0 0 auto;
+  display: inline-block;
+  border-radius: 0 !important;
+  background: var(--passport-base-accent) !important;
+  background-color: var(--passport-base-accent) !important;
+  background-image: none !important;
+  box-shadow: 0 2px 8px rgba(0, 47, 167, 0.35);
+}
+
+.play-passport-card .play-passport-base-text {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.5px;
+  color: var(--passport-base-accent);
 }
 
 .play-passport-name,
@@ -2488,54 +2540,80 @@ canvas.game {
 .play-passport-name {
   font-size: 11px;
   letter-spacing: 0.6px;
-  opacity: 0.9;
+  color: #5f79b6;
+  opacity: 1;
 }
 
 .play-passport-tier {
   font-size: 18px;
   letter-spacing: 1px;
-  color: #ffe7b5;
+  color: #0047d6;
 }
 
 .play-passport-expiry {
   font-size: 10px;
   letter-spacing: 0.8px;
-  opacity: 0.92;
+  color: #5f79b6;
+  opacity: 1;
 }
 
-.play-passport-cta {
+.play-passport-modal .play-passport-cta {
   width: 100%;
   min-height: 46px;
   border-radius: 12px;
-  border: 3px solid #8f6915;
-  background: #f4bf5d;
-  color: #2a1142;
+  border: 3px solid #9bbcff;
+  background: linear-gradient(180deg, #3c8dff 0%, #0052ff 100%);
+  color: #f5f9ff;
   font-family: "Press Start 2P", cursive;
   font-size: 10px;
   letter-spacing: 1px;
   cursor: pointer;
   box-shadow:
-    0 4px 0 #b07d22,
-    0 8px 14px rgba(29, 12, 47, 0.2);
+    0 4px 0 #0038b5,
+    0 8px 14px rgba(5, 19, 62, 0.46);
   transition:
     transform 0.08s ease,
     background-color 0.12s ease,
     box-shadow 0.12s ease;
 }
 
-.play-passport-cta:hover {
-  background: #ffd279;
+.play-passport-modal .play-passport-cta:hover {
+  background: linear-gradient(180deg, #5ca2ff 0%, #1e66ff 100%);
   box-shadow:
-    0 5px 0 #b07d22,
-    0 10px 16px rgba(29, 12, 47, 0.22);
+    0 5px 0 #0038b5,
+    0 10px 16px rgba(5, 19, 62, 0.5);
 }
 
-.play-passport-cta:active {
+.play-passport-modal .play-passport-cta:active {
   transform: translateY(3px);
-  background: #e5b254;
+  background: linear-gradient(180deg, #236fff 0%, #0049e5 100%);
   box-shadow:
-    0 1px 0 #b07d22,
-    0 2px 6px rgba(29, 12, 47, 0.2);
+    0 1px 0 #0038b5,
+    0 2px 6px rgba(5, 19, 62, 0.42);
+}
+
+/* Hard override in case any legacy button palette still wins */
+.play-passport-modal .modal-box.play-passport-box .play-passport-cta {
+  border: 3px solid #9bbcff !important;
+  background: linear-gradient(180deg, #3c8dff 0%, #0052ff 100%) !important;
+  color: #f5f9ff !important;
+  box-shadow:
+    0 4px 0 #0038b5,
+    0 8px 14px rgba(5, 19, 62, 0.46) !important;
+}
+
+.play-passport-modal .modal-box.play-passport-box .play-passport-cta:hover {
+  background: linear-gradient(180deg, #5ca2ff 0%, #1e66ff 100%) !important;
+  box-shadow:
+    0 5px 0 #0038b5,
+    0 10px 16px rgba(5, 19, 62, 0.5) !important;
+}
+
+.play-passport-modal .modal-box.play-passport-box .play-passport-cta:active {
+  background: linear-gradient(180deg, #236fff 0%, #0049e5 100%) !important;
+  box-shadow:
+    0 1px 0 #0038b5,
+    0 2px 6px rgba(5, 19, 62, 0.42) !important;
 }
 
 /* Logout - Red */
@@ -3293,13 +3371,21 @@ canvas.game {
     gap: 8px;
   }
 
-  .play-passport-card .play-passport-base-logo {
-    width: 34px;
-    height: 34px;
-    min-width: 34px;
-    min-height: 34px;
+  .play-passport-card .play-passport-base-badge {
     top: 10px;
-    left: 12px;
+    right: 12px;
+    gap: 5px;
+  }
+
+  .play-passport-card .play-passport-base-logo {
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    min-height: 16px;
+  }
+
+  .play-passport-card .play-passport-base-text {
+    font-size: 10px;
   }
 
   .play-passport-name {
