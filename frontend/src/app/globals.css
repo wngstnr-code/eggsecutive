@@ -3987,6 +3987,34 @@ canvas.game {
   text-decoration: none;
 }
 
+.money-nav-home-btn {
+  background: linear-gradient(180deg, #3f4f68 0%, #29384f 100%);
+  border-color: #6c7f9b;
+  color: #e8f1ff;
+}
+
+.money-nav-home-btn:hover {
+  background: linear-gradient(180deg, #4a5d79 0%, #30425c 100%);
+}
+
+.money-nav-home-btn:active {
+  background: linear-gradient(180deg, #34435a 0%, #243248 100%);
+}
+
+.money-nav-play-btn {
+  background: linear-gradient(180deg, #3c8dff 0%, #0052ff 100%);
+  border-color: #9bbcff;
+  color: #f5f9ff;
+}
+
+.money-nav-play-btn:hover {
+  background: linear-gradient(180deg, #58a0ff 0%, #1d66ff 100%);
+}
+
+.money-nav-play-btn:active {
+  background: linear-gradient(180deg, #2b77ff 0%, #0049e5 100%);
+}
+
 @media (max-width: 768px) {
   .money-page {
     padding: 18px 14px;
