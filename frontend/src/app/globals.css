@@ -7417,6 +7417,25 @@ canvas.game {
   height: 2px;
 }
 
+@media (min-width: 761px) {
+  .play-nav-actions .play-menu-trigger {
+    width: 48px;
+    min-width: 48px;
+    height: 48px;
+    min-height: 48px;
+    border-radius: 12px;
+  }
+
+  .play-nav-actions .hamburger-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .play-nav-actions .hamburger-icon span {
+    height: 3px;
+  }
+}
+
 @media (max-width: 420px) {
   .play-nav-actions .play-alert-icon,
   .play-nav-actions .hamburger-icon {
