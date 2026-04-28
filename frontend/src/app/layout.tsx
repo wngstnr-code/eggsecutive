@@ -14,7 +14,16 @@ const APP_SPLASH_BG = "#0a1428";
 
 const miniAppEmbed = {
   version: "next",
+  image: APP_IMAGE,
   imageUrl: APP_IMAGE,
+  homeUrl: APP_URL,
+  framesUrl: APP_URL,
+  name: APP_NAME,
+  iconUrl: APP_ICON,
+  splashImageUrl: APP_ICON,
+  splashBackgroundColor: APP_SPLASH_BG,
+  buttonTitle: "Play Eggsecutive",
+  webhookUrl: "",
   button: {
     title: "Play Eggsecutive",
     action: {
