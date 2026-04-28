@@ -118,7 +118,7 @@ export function GameCanvas({ backgroundMode = false }: GameCanvasProps) {
               1:00
             </div>
           </div>
-          <button id="bet-btn">START RUN</button>
+          <button id="bet-btn">PLAY</button>
         </div>
       </div>
 

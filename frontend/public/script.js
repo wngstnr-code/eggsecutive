@@ -492,7 +492,7 @@ function setBetButtonState() {
     return;
   }
 
-  betBtn.innerText = "START RUN";
+  betBtn.innerText = "PLAY";
   betBtn.classList.remove("active");
   betBtn.classList.remove("busy");
   betBtn.disabled = false;
@@ -909,10 +909,10 @@ function renderTimer(ms, atCp) {
   // Logic for timer colors and flashing
   if (bet.active && ms <= 10000) {
     el.classList.add("timer-flash");
-    el.style.color = ""; // Animation handles color
+    el.style.color = "#ffffff";
   } else {
     el.classList.remove("timer-flash");
-    el.style.color = "#50e3c2"; // Start green
+    el.style.color = "#ffffff";
   }
 
   if (card) {
@@ -948,8 +948,8 @@ function renderBetHud() {
   if (payEl) payEl.innerText = formatUsdAmount(payout);
   if (scoreCpEl) {
     scoreCpEl.innerText = String(bet.currentCp);
-    // Change CP color per checkpoint
-    const cpColors = ["#ffffff", "#ffb703", "#50e3c2", "#fb8500", "#9b5de5", "#06d6a0", "#ff4d4d"];
+    // Cycle through Base-centric blues for checkpoint emphasis.
+    const cpColors = ["#cfe0ff", "#9dc0ff", "#6da4ff", "#3d88ff", "#0052ff", "#1a63ff", "#78b0ff"];
     const cpColorIndex = bet.currentCp % cpColors.length;
     scoreCpEl.style.color = cpColors[cpColorIndex];
   }
@@ -1354,42 +1354,42 @@ function DirectionalLight() {
 function createBaseCheckpointBannerTexture(cpNumber) {
   const canvas = document.createElement("canvas");
   canvas.width = 512;
-  canvas.height = 128;
+  canvas.height = 176;
   const ctx = canvas.getContext("2d");
 
   if (!ctx) return new THREE.CanvasTexture(canvas);
 
   const bgGradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
-  bgGradient.addColorStop(0, "#0f1f4a");
-  bgGradient.addColorStop(0.55, "#1a2f66");
-  bgGradient.addColorStop(1, "#274487");
+  bgGradient.addColorStop(0, "#08308f");
+  bgGradient.addColorStop(0.55, "#0052ff");
+  bgGradient.addColorStop(1, "#3d88ff");
   ctx.fillStyle = bgGradient;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   const stripeGradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
-  stripeGradient.addColorStop(0, "#7cffbe");
-  stripeGradient.addColorStop(1, "#35d07f");
+  stripeGradient.addColorStop(0, "#d6e6ff");
+  stripeGradient.addColorStop(1, "#9cc0ff");
   ctx.fillStyle = stripeGradient;
-  ctx.fillRect(0, 0, canvas.width, 11);
-  ctx.fillRect(0, canvas.height - 11, canvas.width, 11);
+  ctx.fillRect(0, 0, canvas.width, 14);
+  ctx.fillRect(0, canvas.height - 14, canvas.width, 14);
 
-  ctx.fillStyle = "#f4da60";
+  ctx.fillStyle = "#f3f8ff";
   ctx.beginPath();
-  ctx.arc(54, canvas.height / 2, 24, 0, Math.PI * 2);
+  ctx.arc(62, canvas.height / 2, 30, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.fillStyle = "#102250";
+  ctx.fillStyle = "#0052ff";
   ctx.beginPath();
-  ctx.arc(54, canvas.height / 2, 13, 0, Math.PI * 2);
+  ctx.arc(62, canvas.height / 2, 16, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.fillStyle = "#edfff7";
-  ctx.font = "bold 38px Arial";
+  ctx.fillStyle = "#f5f9ff";
+  ctx.font = "bold 44px Arial";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(
     `CHECKPOINT ${cpNumber}`,
-    canvas.width / 2 + 16,
+    canvas.width / 2 + 20,
     canvas.height / 2,
   );
 
@@ -1412,11 +1412,11 @@ function createBaseGroundTexture() {
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
 
-  ctx.strokeStyle = "rgba(120,90,16,0.95)";
+  ctx.strokeStyle = "rgba(0, 57, 184, 0.92)";
   ctx.lineWidth = 16;
   ctx.strokeText("BASE", canvas.width / 2, canvas.height / 2 + 6);
 
-  ctx.fillStyle = "rgba(244, 218, 96, 0.96)";
+  ctx.fillStyle = "rgba(215, 231, 255, 0.98)";
   ctx.fillText("BASE", canvas.width / 2, canvas.height / 2 + 6);
 
   const texture = new THREE.CanvasTexture(canvas);
@@ -1493,8 +1493,8 @@ function Grass(rowIndex, isCheckpoint) {
       new THREE.MeshLambertMaterial({ color }),
     );
 
-  const middleColor = isCheckpoint ? 0x2f4f9d : 0xbaf455;
-  const sideColor = isCheckpoint ? 0x243f82 : 0x99c846;
+  const middleColor = isCheckpoint ? 0x2f6fff : 0xbaf455;
+  const sideColor = isCheckpoint ? 0x1d4fb8 : 0x99c846;
 
   const middle = createSection(middleColor);
   middle.receiveShadow = true;
@@ -1511,7 +1511,7 @@ function Grass(rowIndex, isCheckpoint) {
   if (isCheckpoint) {
     const cpNumber = Math.floor(rowIndex / CP_INTERVAL);
     const postMat = new THREE.MeshLambertMaterial({
-      color: 0x162c62,
+      color: 0xf4f8ff,
       flatShading: true,
     });
     const bannerMat = new THREE.MeshLambertMaterial({
@@ -1529,7 +1529,7 @@ function Grass(rowIndex, isCheckpoint) {
     grass.add(postR);
 
     const banner = new THREE.Mesh(
-      new THREE.BoxGeometry(tilesPerRow * tileSize * 0.75, 2, 12),
+      new THREE.BoxGeometry(tilesPerRow * tileSize * 0.75, 3, 16),
       bannerMat,
     );
     banner.position.set(0, -5, 36);
@@ -1539,7 +1539,7 @@ function Grass(rowIndex, isCheckpoint) {
     [-1, 1].forEach((side) => {
       const laneGlow = new THREE.Mesh(
         new THREE.BoxGeometry(8, tileSize * 0.95, 0.6),
-        new THREE.MeshLambertMaterial({ color: 0x6de7b0, flatShading: true }),
+        new THREE.MeshLambertMaterial({ color: 0x8fb9ff, flatShading: true }),
       );
       laneGlow.position.set(side * tilesPerRow * tileSize * 0.47, 0, 2.2);
       grass.add(laneGlow);
@@ -1560,7 +1560,7 @@ function Grass(rowIndex, isCheckpoint) {
     [-1, 1].forEach((side) => {
       const flag = new THREE.Mesh(
         new THREE.BoxGeometry(2, 2, 18),
-        new THREE.MeshLambertMaterial({ color: 0x35d07f, flatShading: true }),
+        new THREE.MeshLambertMaterial({ color: 0x2f6fff, flatShading: true }),
       );
       flag.position.set(side * tilesPerRow * tileSize * 0.42, 15, 9);
       flag.castShadow = true;
@@ -1568,7 +1568,7 @@ function Grass(rowIndex, isCheckpoint) {
 
       const flagTop = new THREE.Mesh(
         new THREE.BoxGeometry(8, 1, 5),
-        new THREE.MeshLambertMaterial({ color: 0xf4ff67, flatShading: true }),
+        new THREE.MeshLambertMaterial({ color: 0xdceaff, flatShading: true }),
       );
       flagTop.position.set(
         side * tilesPerRow * tileSize * 0.42 + side * 4,

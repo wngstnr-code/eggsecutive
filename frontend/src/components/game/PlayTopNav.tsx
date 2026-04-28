@@ -896,7 +896,7 @@ export function PlayTopNav() {
                   const betBtn = document.getElementById("bet-btn");
                   if (betBtn) betBtn.click();
                 }}
-                aria-label="Start run"
+                aria-label="PLAY"
               >
                 <PlayIcon aria-hidden="true" fill="currentColor" />
               </button>

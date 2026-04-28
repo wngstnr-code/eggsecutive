@@ -71,7 +71,7 @@ canvas.game {
 }
 
 .timer-card .stat-value {
-  color: #76f7bf;
+  color: #ffffff;
 }
 
 .timer-card.timer-warning {
@@ -79,7 +79,7 @@ canvas.game {
 }
 
 .timer-card.timer-warning .stat-value {
-  color: #ff6b6b;
+  color: #ffffff;
 }
 
 @keyframes pulse-red {
@@ -7212,7 +7212,7 @@ canvas.game {
 
   /* Timer Flash Animation */
   @keyframes timer-pulse {
-    0%, 100% { opacity: 1; color: #ff4d4d; }
+    0%, 100% { opacity: 1; color: #ffffff; }
     50% { opacity: 0.5; color: #ffffff; }
   }
 
