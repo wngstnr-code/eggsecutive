@@ -5,8 +5,15 @@ const maxTileIndex = 8;
 const tilesPerRow = maxTileIndex - minTileIndex + 1;
 const tileSize = 42;
 const MAX_CONSECUTIVE_ROAD_ROWS = 4;
+const TRAIN_SPAWN_MIN_MS = 4000;
+const TRAIN_SPAWN_MAX_MS = 6000;
+const TRAIN_COOLDOWN_ROWS = 2;
+const TRAIN_LOOP_GAP_MIN_MS = 3000;
+const TRAIN_LOOP_GAP_MAX_MS = 5000;
 let pendingRoadRowsInSegment = 0;
 let consecutiveRoadRows = 0;
+let nextTrainRowAtMs = 0;
+let trainCooldownRows = 0;
 
 // ============================================================
 // BETTING SYSTEM
@@ -2836,6 +2843,10 @@ function generateRows(amount, startIndex) {
 }
 
 function generateRow(rowIndex) {
+  if (trainCooldownRows > 0) {
+    trainCooldownRows = Math.max(0, trainCooldownRows - 1);
+  }
+
   // Force grass row at every checkpoint position
   if (rowIndex > 0 && rowIndex % CP_INTERVAL === 0) {
     pendingRoadRowsInSegment = 0;
@@ -2864,9 +2875,12 @@ function generateRow(rowIndex) {
   }
 
   // Occasional train track row — single row, breaks any road segment buildup
-  if (Math.random() < 0.1) {
+  if (trainCooldownRows === 0 && Date.now() >= nextTrainRowAtMs) {
     pendingRoadRowsInSegment = 0;
     consecutiveRoadRows = 0;
+    nextTrainRowAtMs =
+      Date.now() + THREE.MathUtils.randInt(TRAIN_SPAWN_MIN_MS, TRAIN_SPAWN_MAX_MS);
+    trainCooldownRows = TRAIN_COOLDOWN_ROWS;
     return generateTrainLaneMetadata();
   }
 
@@ -2990,7 +3004,11 @@ function generateTruckLaneMetadata() {
 
 function generateTrainLaneMetadata() {
   const direction = randomElement([true, false]);
-  const speed = randomElement([240, 280, 320]);
+  const speed = randomElement([220, 250, 280]);
+  const trainGapMs = THREE.MathUtils.randInt(
+    TRAIN_LOOP_GAP_MIN_MS,
+    TRAIN_LOOP_GAP_MAX_MS,
+  );
 
   const carCount = 6;
   const segmentSpacing = 2;
@@ -3008,7 +3026,7 @@ function generateTrainLaneMetadata() {
     isLocomotive: i === 0,
   }));
 
-  return { type: "train", direction, speed, vehicles };
+  return { type: "train", direction, speed, vehicles, trainGapMs };
 }
 
 const moveClock = new THREE.Clock(false);
@@ -3097,6 +3115,10 @@ function animateVehicles() {
       rowData.type === "train"
     ) {
       const effectiveSpeed = rowData.speed * speedMultiplier;
+      const trainGapDistance =
+        rowData.type === "train" && rowData.trainGapMs
+          ? (effectiveSpeed * rowData.trainGapMs) / 1000
+          : 0;
 
       rowData.vehicles.forEach(({ ref }) => {
         if (!ref) throw Error("Vehicle reference is missing");
@@ -3104,12 +3126,12 @@ function animateVehicles() {
         if (rowData.direction) {
           ref.position.x =
             ref.position.x > endOfRow
-              ? beginningOfRow
+              ? beginningOfRow - trainGapDistance
               : ref.position.x + effectiveSpeed * delta;
         } else {
           ref.position.x =
             ref.position.x < beginningOfRow
-              ? endOfRow
+              ? endOfRow + trainGapDistance
               : ref.position.x - effectiveSpeed * delta;
         }
       });
